@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevLife: Code & Consequences</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #e0f2fe; /* Sky 100 */
+            overflow: hidden;
+        }
+        .phone-container {
+            background: #1e293b; /* Slate 800 */
+            border-radius: 40px;
+            padding: 12px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 420px;
+            max-height: 95vh; /* Prevents it from being taller than the screen */
+        }
+        .phone-screen {
+            background-color: #f8fafc; /* Slate 50 */
+            border-radius: 28px;
+            width: 100%;
+            aspect-ratio: 9 / 19.5; /* Makes height responsive to width */
+            overflow: hidden;
+            position: relative;
+        }
+        .hidden { display: none !important; }
+
+        /* Animations */
+        @keyframes pop-in {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        @keyframes slide-in-up {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes confetti-burst {
+            0% { transform: scale(0) rotate(0deg); opacity: 1; }
+            100% { transform: scale(1.5) rotate(360deg); opacity: 0; }
+        }
+        @keyframes bonk {
+            0% { transform: scale(1) rotate(0); }
+            20% { transform: scale(1.2) rotate(-10deg); }
+            40% { transform: scale(1.2) rotate(10deg); }
+            60% { transform: scale(1.2) rotate(-10deg); }
+            100% { transform: scale(1) rotate(0); }
+        }
+
+        /* Character Styles */
+        #kai-character {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 300px;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .face { transition: opacity 0.2s ease-in-out; }
+
+        /* UI Elements */
+        .scenario-card {
+            background: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            animation: slide-in-up 0.5s ease-out forwards;
+        }
+        .choice-bubble {
+            background: #e0f2fe;
+            border: 2px solid #93c5fd;
+            transition: all 0.2s ease;
+        }
+        .choice-bubble:hover:not(.disabled) {
+            background: #dbeafe;
+            border-color: #60a5fa;
+            transform: scale(1.03);
+        }
+        .choice-bubble.disabled { cursor: not-allowed; opacity: 0.5; }
+
+        #feedback-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: red;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="phone-container">
+        <div id="phone-screen" class="phone-screen flex flex-col">
+            <!-- Start Screen -->
+            <div id="start-screen" class="flex-1 flex flex-col items-center justify-center p-8 text-center">
+                <h1 class="text-4xl font-bold text-gray-800 mb-2">DevLife</h1>
+                <p class="text-lg text-gray-500 mb-8">Code & Consequences</p>
+                <button id="start-btn" class="bg-blue-500 text-white font-bold py-3 px-12 rounded-full text-xl hover:bg-blue-600 transition-all transform hover:scale-105">Play</button>
+            </div>
+
+            <!-- Game Screen -->
+            <div id="game-screen" class="hidden flex-1 flex-col justify-between">
+                <div id="character-view" class="h-1/2 relative">
+                    <!-- Kai SVG will be injected here -->
+                    <div id="feedback-overlay"></div>
+                </div>
+                <div id="interaction-area" class="h-1/2 p-4 flex flex-col justify-center">
+                     <!-- Scenarios and choices will be injected here -->
+                </div>
+                 <div id="progress-bar" class="w-full bg-gray-200 h-1.5">
+                    <div id="progress-bar-inner" class="bg-green-400 h-1.5" style="width: 0%; transition: width 0.5s ease;"></div>
+                </div>
+            </div>
+             <!-- End Screen -->
+            <div id="end-screen" class="hidden flex-1 flex flex-col items-center justify-center p-8 text-center">
+                 <h1 class="text-3xl font-bold text-gray-800 mb-2">Day Complete!</h1>
+                 <div id="end-message" class="text-xl mb-6 text-gray-600"></div>
+                 <div id="password-container" class="hidden mt-4 p-4 bg-green-100 rounded-lg w-full">
+                     <p class="text-sm text-green-700">LMS COMPLETION CODE:</p>
+                     <p class="text-2xl mt-1 font-bold tracking-widest text-green-800">INTEGRITY2024</p>
+                 </div>
+                 <button id="restart-btn" class="mt-8 bg-blue-500 text-white font-bold py-3 px-12 rounded-full text-lg hover:bg-blue-600 transition-all transform hover:scale-105">Play Again</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- DOM Elements ---
+    const startScreen = document.getElementById('start-screen');
+    const gameScreen = document.getElementById('game-screen');
+    const endScreen = document.getElementById('end-screen');
+    const startBtn = document.getElementById('start-btn');
+    const restartBtn = document.getElementById('restart-btn');
+    const characterView = document.getElementById('character-view');
+    const interactionArea = document.getElementById('interaction-area');
+    const progressBar = document.getElementById('progress-bar-inner');
+    const feedbackOverlay = document.getElementById('feedback-overlay');
+
+    // --- SVG Templates ---
+    const SVG_KAI = `
+        <svg id="kai-character" viewBox="0 0 300 300">
+            <g> <!-- Main Body -->
+                <path d="M 80,290 C 80,200 220,200 220,290 Z" fill="#60a5fa"/> <!-- Hoodie -->
+                <rect x="110" y="280" width="80" height="20" fill="#334155"/> <!-- Pants -->
+                <circle cx="150" cy="150" r="70" fill="#ffedd5"/> <!-- Head -->
+                <path d="M 100,80 Q 150,50 200,80 C 220,120 180,180 150,180 C 120,180 80,120 100,80 Z" fill="#1e293b"/> <!-- Hair -->
+                 <!-- Expressions -->
+                <g id="face-neutral" class="face" style="opacity:1;">
+                    <ellipse cx="125" cy="150" rx="6" ry="10" fill="black"/>
+                    <ellipse cx="175" cy="150" rx="6" ry="10" fill="black"/>
+                    <path d="M 140,180 L 160,180" stroke="black" fill="none" stroke-width="3" stroke-linecap="round"/>
+                </g>
+                <g id="face-happy" class="face" style="opacity:0;">
+                    <path d="M 120,145 C 125,155 130,155 130,145" stroke="black" fill="none" stroke-width="3"/>
+                    <path d="M 170,145 C 175,155 180,155 180,145" stroke="black" fill="none" stroke-width="3"/>
+                    <path d="M 140,175 Q 150,195 160,175" stroke="black" fill="none" stroke-width="3"/>
+                </g>
+                <g id="face-worried" class="face" style="opacity:0;">
+                    <ellipse cx="125" cy="150" rx="6" ry="10" fill="black"/>
+                    <ellipse cx="175" cy="150" rx="6" ry="10" fill="black"/>
+                    <path d="M 140,185 Q 150,175 160,185" stroke="black" fill="none" stroke-width="3"/>
+                </g>
+            </g>
+        </svg>`;
+    
+    // --- Game Data ---
+    const scenarioData = [
+        {
+            prompt: "Your teammate Anna DMs you: 'Hey, I found a huge bug but we ship in 5. I'm just gonna ignore it. We can't miss the deadline.'",
+            choices: [
+                { text: "lol just ship it 🚀", correct: false, feedback: "Whoops! Shipping a known bug violates our integrity principle. Trust is key!" },
+                { text: "OMG no, we have to report it now!", correct: true, feedback: "Great call! Prioritizing security builds customer trust." }
+            ]
+        },
+        {
+            prompt: "At lunch, your coworker makes a joke about another person's nationality. They look really uncomfortable. He DMs you: 'just a joke, right?'",
+            choices: [
+                { text: "Ngl, that was pretty awk...", correct: true, feedback: "Perfect. It's everyone's job to keep our workplace respectful." },
+                { text: "yeah whatever it was funny", correct: false, feedback: "Not a good look. We have a zero-tolerance policy for harassment or discrimination." }
+            ]
+        },
+        {
+            prompt: "You get a DM from sales: 'This client from a sanctioned country wants to pay through a different company to get around the rules. Big money. We in?'",
+            choices: [
+                { text: "Let's get that bag 🤑", correct: false, feedback: "Big fail! Bypassing sanctions is illegal and can have huge consequences." },
+                { text: "No way. Shut it down & tell Legal.", correct: true, feedback: "Exactly! Never break the law for a sale. Report it." }
+            ]
+        }
+    ];
+
+    // --- Game State & Animation ---
+    let currentScenario = 0;
+    let score = 0;
+    const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    let sfx;
+
+    // --- Audio ---
+    function initializeAudio() {
+        sfx = {
+            start: new Tone.Synth({ oscillator: { type: 'triangle' } }).toDestination(),
+            correct: new Tone.PolySynth(Tone.Synth, { oscillator: { type: "sine" } }).toDestination(),
+            incorrect: new Tone.MetalSynth({ frequency: 50, envelope: { attack: 0.01, decay: 0.2 }, harmonicity: 2.1, modulationIndex: 32, resonance: 800 }).toDestination(),
+            click: new Tone.MembraneSynth({ pitchDecay: 0.01, octaves: 2 }).toDestination()
+        };
+    }
+    
+    function playSfx(type) {
+        if (!sfx) return;
+        if (Tone.context.state !== 'running') { Tone.start(); }
+        if (type === 'start') sfx.start.triggerAttackRelease("C5", "8n");
+        if (type === 'correct') sfx.correct.triggerAttackRelease(["C5", "E5", "G5"], "8n");
+        if (type === 'incorrect') sfx.incorrect.triggerAttackRelease("C2", "8n");
+        if (type === 'click') sfx.click.triggerAttackRelease("C2", "8n");
+    }
+
+    // --- Kai Controller ---
+    const kai = {
+        element: null,
+        init() {
+            characterView.innerHTML = SVG_KAI;
+            this.element = document.getElementById('kai-character');
+        },
+        express(mood) {
+            this.element.querySelectorAll('.face').forEach(f => f.style.opacity = 0);
+            this.element.querySelector(`#face-${mood}`).style.opacity = 1;
+        },
+        react(correct) {
+            if (correct) {
+                this.express('happy');
+                this.element.style.transform = 'translateX(-50%) scale(1.1) rotate(5deg)';
+                showConfetti();
+            } else {
+                this.express('worried');
+                this.element.style.animation = 'bonk 0.5s ease';
+                this.element.addEventListener('animationend', () => this.element.style.animation = '', { once: true });
+            }
+        },
+        reset() {
+            this.express('neutral');
+            this.element.style.transform = 'translateX(-50%)';
+        }
+    };
+    
+    function showConfetti() {
+        for (let i = 0; i < 30; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            const colors = ['#ef4444', '#f59e0b', '#22c55e', '#3b82f6', '#8b5cf6'];
+            confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.left = `${Math.random() * 100}%`;
+            confetti.style.top = `${Math.random() * 100}%`;
+            confetti.style.animation = `confetti-burst 0.8s ${Math.random() * 0.3}s ease-out forwards`;
+            feedbackOverlay.appendChild(confetti);
+            setTimeout(() => confetti.remove(), 1100);
+        }
+    }
+
+    // --- Game Flow ---
+    function startGame() {
+        playSfx('start');
+        startScreen.classList.add('hidden');
+        endScreen.classList.add('hidden');
+        gameScreen.style.display = 'flex';
+        kai.init();
+        currentScenario = 0;
+        score = 0;
+        loadScenario(currentScenario);
+    }
+
+    function loadScenario(index) {
+        kai.reset();
+        progressBar.style.width = `${(index / scenarioData.length) * 100}%`;
+        const data = scenarioData[index];
+        interactionArea.innerHTML = `
+            <div class="scenario-card p-4 rounded-xl w-full">
+                <p class="text-gray-500 text-sm">New Message</p>
+                <p class="text-gray-800 font-bold">${data.prompt}</p>
+            </div>
+            <div id="choices-container" class="mt-4 w-full flex flex-col items-center gap-3">
+                ${data.choices.map(c => `<button class="choice-bubble w-full p-3 rounded-full text-blue-800 font-semibold">${c.text}</button>`).join('')}
+            </div>
+        `;
+        const choiceButtons = interactionArea.querySelectorAll('.choice-bubble');
+        choiceButtons.forEach((btn, i) => {
+            btn.onclick = () => handleChoice(data.choices[i], choiceButtons);
+        });
+    }
+
+    async function handleChoice(choice, buttons) {
+        playSfx('click');
+        buttons.forEach(btn => btn.classList.add('disabled'));
+        kai.react(choice.correct);
+        
+        if(choice.correct) {
+            score++;
+            playSfx('correct');
+        } else {
+            playSfx('incorrect');
+        }
+
+        interactionArea.innerHTML += `
+            <div class="scenario-card p-4 rounded-xl w-full mt-4 text-center pop-in">
+                <p class="font-bold ${choice.correct ? 'text-green-500' : 'text-red-500'}">${choice.correct ? "NICE!" : "YIKES."}</p>
+                <p class="text-gray-600">${choice.feedback}</p>
+                <button id="next-btn" class="mt-3 bg-gray-800 text-white font-bold py-2 px-6 rounded-full">Next ></button>
+            </div>
+        `;
+        document.getElementById('next-btn').onclick = () => {
+             playSfx('click');
+            currentScenario++;
+            if (currentScenario < scenarioData.length) {
+                loadScenario(currentScenario);
+            } else {
+                endGame();
+            }
+        };
+    }
+
+    function endGame() {
+        progressBar.style.width = '100%';
+        const pass = score >= scenarioData.length - 1;
+        gameScreen.style.display = 'none';
+        endScreen.classList.remove('hidden');
+
+        document.getElementById('end-message').textContent = `You scored ${score}/${scenarioData.length}.`;
+        const passwordContainer = document.getElementById('password-container');
+        if (pass) {
+            playSfx('correct');
+            passwordContainer.classList.remove('hidden');
+        } else {
+            playSfx('incorrect');
+            passwordContainer.classList.add('hidden');
+        }
+    }
+
+    // --- Initializer ---
+    startBtn.addEventListener('click', () => {
+        if (!sfx) initializeAudio();
+        startGame();
+    });
+    restartBtn.addEventListener('click', startGame);
+});
+</script>
+</body>
+</html>
+
+
