@@ -6,7 +6,7 @@
     <title>Code Detectives: The JetBrains Case Files</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Special+Agent&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
     <style>
@@ -47,6 +47,10 @@
         @keyframes code-scroll {
             from { transform: translateY(0); }
             to { transform: translateY(-100px); }
+        }
+        @keyframes fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         .clue-hotspot {
@@ -95,8 +99,8 @@
         #instruction-panel {
             animation: clue-pop 0.5s 1s ease-out forwards;
             opacity: 0;
-            position: absolute; 
-            bottom: 1rem; 
+            position: absolute;  
+            bottom: 1rem;  
             right: 1rem;   
             transform: none;
         }
@@ -110,29 +114,27 @@
         .popup-anim {
             animation: clue-pop 0.3s ease-out forwards;
         }
-         .popup-anim strong {
+        .popup-anim strong {
             font-weight: 700;
             color: #111827;
         }
+        
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
+<body>
 
     <div class="case-file-container flex flex-col">
-        <!-- Start Screen -->
         <div id="start-screen" class="flex-1 flex flex-col items-center justify-center p-8 text-center bg-gray-200">
             <h1 class="text-6xl font-bold text-gray-800 mb-2" style="font-family: 'Special Agent', sans-serif;">Code Detectives</h1>
             <p class="text-xl text-gray-600 mb-8">The JetBrains Case Files</p>
             <button id="start-btn" class="bg-indigo-600 text-white font-bold py-3 px-12 rounded-lg text-2xl hover:bg-indigo-700 transition-all transform hover:scale-105">Open the First Case</button>
         </div>
 
-        <!-- Game Screen -->
         <div id="game-screen" class="hidden flex-1 grid grid-cols-3 h-full">
             <div id="scene" class="col-span-2 overflow-hidden"></div>
             <div id="case-details" class="col-span-1 p-4 flex flex-col overflow-y-auto min-h-0"></div>
         </div>
         
-        <!-- End Screen -->
         <div id="end-screen" class="hidden flex-1 flex flex-col items-center justify-center p-8 text-center bg-gray-200">
              <h1 class="text-5xl font-bold text-gray-800 mb-4" style="font-family: 'Special Agent', sans-serif;">All Cases Closed</h1>
              <div id="end-message" class="text-2xl mb-6 text-gray-700"></div>
@@ -140,6 +142,7 @@
                  <p class="text-md text-green-800">LMS COMPLETION CODE:</p>
                  <p class="text-3xl mt-1 font-bold tracking-widest text-green-900">INTEGRITY2024</p>
              </div>
+             <p id="lms-instructions" class="mt-4 text-md text-gray-600 max-w-sm hidden">To receive a passing grade, please copy the code above and enter it into the LMS.</p>
              <button id="restart-btn" class="mt-8 bg-indigo-600 text-white font-bold py-3 px-12 rounded-lg text-xl hover:bg-indigo-700">Re-open Cases</button>
         </div>
     </div>
@@ -154,6 +157,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const restartBtn = document.getElementById('restart-btn');
     const scene = document.getElementById('scene');
     const caseDetails = document.getElementById('case-details');
+    const lmsInstructions = document.getElementById('lms-instructions');
+
 
     // --- SVG Templates ---
     const SVG_UNIT734 = `
@@ -220,13 +225,25 @@ document.addEventListener('DOMContentLoaded', () => {
 }</code></pre>
             </foreignObject>
             <rect x="425" y="125" width="320" height="25" fill="#ef4444" fill-opacity="0.2" stroke="#ef4444" stroke-width="1"/>
-        </svg>`,
+        </svg>`
     };
 
     // --- Game Data ---
     const caseFiles = [
-        { title: "The Case of the Critical Bug", briefing: "Our first case involves <strong>Trust and Integrity</strong>. Integrity means doing the right thing, even when no one is watching. Let's see what happens.", sceneSVG: SCENE_SVGS.codeReview, clues: [{ id: 'clue1-1', type: 'email', x: '10%', y: '45%', evidence: "<b>CASE LOG:</b> Email from manager says 'Release MUST go out today, no exceptions!'" }, { id: 'clue1-2', type: 'text', x: '80%', y: '20%', evidence: "<b>CASE LOG:</b> Code commit shows a vulnerability marked '@TODO: FIX LATER'." }], interrogation: "'Look, I saw the bug, but the deadline was tight. I figured I'd patch it next week. What was I supposed to do?'", choices: [{ text: "Your Response: 'You should have reported it immediately.'", correct: true, feedback: "By prioritizing transparency and security over a deadline, you protect our users and uphold the trust they place in JetBrains. This is the core of our <strong>Integrity</strong> principle." }, { text: "Your Response: 'You were right to prioritize the deadline.'", correct: false, feedback: "The principle of <strong>Integrity</strong> means we must be transparent about errors, especially those that impact security. Hiding a problem puts our users and our company's reputation at risk." }] },
-        // Placeholder for future cases
+        { 
+            title: "The Case of the Critical Bug", 
+            briefing: "Our first case involves <strong>Trust and Integrity</strong>. Integrity means doing the right thing, even when no one is watching. Let's see what happens.", 
+            sceneSVG: SCENE_SVGS.codeReview, 
+            clues: [
+                { id: 'clue1-1', type: 'email', x: '10%', y: '45%', evidence: "<b>CASE LOG:</b> Email from manager says 'Release MUST go out today, no exceptions!'" }, 
+                { id: 'clue1-2', type: 'text', x: '80%', y: '20%', evidence: "<b>CASE LOG:</b> Code commit shows a vulnerability marked '@TODO: FIX LATER'." }
+            ], 
+            interrogation: "'Look, I saw the bug, but the deadline was tight. I figured I'd patch it next week. What was I supposed to do?'", 
+            choices: [
+                { text: "Your Response: 'You should have reported it immediately.'", correct: true, feedback: "By prioritizing transparency and security over a deadline, you protect our users and uphold the trust they place in JetBrains. This is the core of our <strong>Integrity</strong> principle." }, 
+                { text: "Your Response: 'You were right to prioritize the deadline.'", correct: false, feedback: "The principle of <strong>Integrity</strong> means we must be transparent about errors, especially those that impact security. Hiding a problem puts our users and our company's reputation at risk." }
+            ] 
+        }
     ];
 
     // --- Game State & Animation ---
@@ -254,15 +271,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Unit 734 Controller ---
     const unit734 = {
         element: null,
-        init() { 
+        init() {  
             const existing = document.getElementById('unit-734');
             if(existing) existing.remove();
-            scene.innerHTML += SVG_UNIT734; 
-            this.element = document.getElementById('unit-734'); 
+            scene.innerHTML += SVG_UNIT734;  
+            this.element = document.getElementById('unit-734');  
             this.element.style.left = '-350px'; // Ensure it starts off-screen
             this.element.style.right = 'auto';
         },
-        enter(position = 'right') { 
+        enter(position = 'right') {  
             if(!this.element) return;
             if (position === 'right') {
                 this.element.style.left = 'auto';
@@ -277,9 +294,9 @@ document.addEventListener('DOMContentLoaded', () => {
             this.element.querySelectorAll('.face').forEach(f => f.style.opacity = 0);
             this.element.querySelector(`#face-${mood}`).style.opacity = 1;
         },
-        exit() { 
+        exit() {  
             if (!this.element) return;
-            this.element.style.left = '-350px'; 
+            this.element.style.left = '-350px';  
             this.element.style.right = 'auto';
         }
     };
@@ -311,14 +328,15 @@ document.addEventListener('DOMContentLoaded', () => {
         
         let popupHTML;
         if(type === 'email'){
-             popupHTML = `<div class="p-4 bg-gray-100 rounded-t-lg border-b"><p class="font-bold text-gray-800">From: Manager</p><p class="text-sm text-gray-600">Subject: URGENT: Release Today</p></div><div class="p-6"><p class="text-gray-700">Team, the release MUST go out today, no exceptions! The stakeholders are waiting.</p></div><div class="p-4 bg-gray-50 rounded-b-lg text-right"><button id="close-popup-btn" class="bg-indigo-600 text-white font-bold py-2 px-6 rounded-lg">Log as Evidence</button></div>`;
+             popupHTML = `<div class="p-4 bg-gray-100 rounded-t-lg border-b"><p class="font-bold text-gray-800">From: Manager</p><p class="text-sm text-gray-600">Subject: URGENT: Release Today</p></div><div class="p-6"><p class="text-gray-700">Team, the release MUST go out today, no exceptions! The stakeholders are waiting.</p></div><div class="p-4 bg-gray-50 rounded-b-lg text-right"><button id="close-popup-btn" class="bg-indigo-600 text-white font-bold py-2 px-6 rounded-lg">Log as Case Log</button></div>`;
         } else if (type === 'incorrect') {
-            popupHTML = `<div class="p-4 bg-red-100 rounded-t-lg border-b border-red-300"><p class="font-bold text-red-800">That's not the right call.</p></div><div class="p-6">${data.feedback}</div><div class="p-4 bg-gray-50 rounded-b-lg text-right"><button id="close-popup-btn" class="bg-red-600 text-white font-bold py-2 px-6 rounded-lg">Try Another Lead</button></div>`;
+            popupHTML = `<div class="p-4 bg-red-100 rounded-t-lg border-b border-red-300"><p class="font-bold text-red-800">That's not the right call.</p></div><div class="p-6"><p class="text-gray-700">${data.feedback}</p></div><div class="p-4 bg-gray-50 rounded-b-lg text-right"><button id="close-popup-btn" class="bg-red-600 text-white font-bold py-2 px-6 rounded-lg">Try Another Lead</button></div>`;
         } else if (type === 'correct') {
-            popupHTML = `<div class="p-4 bg-green-100 rounded-t-lg border-b border-green-300"><p class="font-bold text-green-800">Conclusion: Correct!</p></div><div class="p-6">${data.feedback}</div><div class="p-4 bg-gray-50 rounded-b-lg text-right"><button id="close-popup-btn" class="bg-gray-800 text-white font-bold py-2 px-6 rounded-lg">Next Simulation</button></div>`;
+            popupHTML = `<div class="p-4 bg-green-100 rounded-t-lg border-b border-green-300"><p class="font-bold text-green-800">Conclusion: Correct!</p></div><div class="p-6"><p class="text-gray-700">${data.feedback}</p></div><div class="p-4 bg-gray-50 rounded-b-lg text-right"><button id="close-popup-btn" class="bg-gray-800 text-white font-bold py-2 px-6 rounded-lg">Next Simulation</button></div>`;
+        } else if (type === 'interrogation-continue') {
+            popupHTML = `<div class="p-4 bg-green-100 rounded-t-lg border-b border-green-300"><p class="font-bold text-green-800">Evidence Gathered!</p></div><div class="p-6"><p class="text-gray-700">You have found all the evidence. Proceed to the interrogation.</p></div><div class="p-4 bg-gray-50 rounded-b-lg text-right"><button id="close-popup-btn" class="bg-indigo-600 text-white font-bold py-2 px-6 rounded-lg">Continue to Interrogation</button></div>`;
         }
-
-
+        
         const popup = document.createElement('div');
         popup.className = 'popup-anim bg-white rounded-lg shadow-2xl w-full max-w-lg border-2 border-gray-300';
         popup.innerHTML = popupHTML;
@@ -347,7 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
         unit734.init();
         caseDetails.innerHTML = `<h2 class="text-2xl font-bold text-indigo-700 mb-4" style="font-family: 'Special Agent', sans-serif;">System Boot</h2><div id="dialogue-box" class="space-y-4"></div>`;
         await wait(500);
-        unit734.enter('left'); 
+        unit734.enter('left');  
         unit734.express('neutral');
         const dialogueBox = document.getElementById('dialogue-box');
         const p1 = document.createElement('p'); dialogueBox.appendChild(p1);
@@ -367,20 +385,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const data = caseFiles[index];
         cluesFound = 0;
-        scene.innerHTML = ''; 
-        if (data.sceneSVG) { scene.innerHTML = data.sceneSVG; } 
+        scene.innerHTML = '';  
+        if (data.sceneSVG) { scene.innerHTML = data.sceneSVG; }  
         else { scene.style.backgroundImage = data.sceneBg; }
         unit734.init();
         caseDetails.innerHTML = `<h2 class="text-2xl font-bold text-indigo-700 mb-4" style="font-family: 'Special Agent', sans-serif;">${data.title}</h2><div id="briefing-box" class="p-2 bg-blue-100 border border-blue-300 rounded text-sm mb-4"></div><div id="clue-log" class="space-y-2"></div>`;
         await wait(500); unit734.enter('right'); unit734.express('thinking');
         const briefingBox = document.getElementById('briefing-box');
         await typewriter(briefingBox, data.briefing);
-
-        const instructionPanel = document.createElement('div');
-        instructionPanel.id = 'instruction-panel';
-        instructionPanel.className = 'absolute bg-yellow-200 p-2 rounded-lg shadow-lg border-2 border-yellow-400 text-center opacity-75';
-        instructionPanel.innerHTML = `<p class="font-bold text-yellow-800 text-sm">Find Clues!</p>`;
-        scene.appendChild(instructionPanel);
+        showInstructionPanel('Use the magnifying glasses to find evidence.');
 
         data.clues.forEach(clue => {
             const hotspot = document.createElement('div');
@@ -392,9 +405,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function findClue(clueData, totalClues) {
+    function showInstructionPanel(text) {
+        let instructionPanel = document.getElementById('instruction-panel');
+        if (!instructionPanel) {
+            instructionPanel = document.createElement('div');
+            instructionPanel.id = 'instruction-panel';
+            instructionPanel.className = 'absolute bg-yellow-200 p-2 rounded-lg shadow-lg border-2 border-yellow-400 text-center opacity-75';
+            scene.appendChild(instructionPanel);
+        }
+        instructionPanel.style.display = 'block';
+        instructionPanel.innerHTML = `<p class="font-bold text-yellow-800 text-sm">${text}</p>`;
+    }
+    
+    function hideInstructionPanel() {
         const instructionPanel = document.getElementById('instruction-panel');
-        if(instructionPanel) instructionPanel.style.display = 'none';
+        if (instructionPanel) {
+            instructionPanel.style.display = 'none';
+        }
+    }
+
+
+    function findClue(clueData, totalClues) {
+        hideInstructionPanel();
 
         const hotspot = document.getElementById(clueData.id);
         if (hotspot.classList.contains('found')) return;
@@ -406,14 +438,29 @@ document.addEventListener('DOMContentLoaded', () => {
             const clueLog = document.getElementById('clue-log');
             clueLog.innerHTML += `<p class="p-2 bg-yellow-100 border border-yellow-300 rounded text-sm pop-in">${clueData.evidence}</p>`;
             caseDetails.scrollTop = caseDetails.scrollHeight;
-            if (cluesFound === totalClues) { unit734.express('neutral'); presentInterrogation(caseFiles[currentCase]); }
+            
+            if (cluesFound === totalClues) {
+                unit734.express('neutral');
+                showPopup({
+                    type: 'interrogation-continue',
+                    onclose: () => {
+                        presentInterrogation(caseFiles[currentCase]);
+                    }
+                });
+            } else {
+                showInstructionPanel('Find the remaining evidence.');
+            }
         };
-        if(clueData.type === 'email'){ showPopup({type: 'email', data: clueData, onclose: logEvidence }); } 
-        else { logEvidence(); }
+
+        if(clueData.type === 'email'){ 
+            showPopup({ type: 'email', data: clueData, onclose: logEvidence });
+        } else { 
+            logEvidence(); 
+        }
     }
     
     async function presentInterrogation(data) {
-        caseDetails.innerHTML = `<h2 class="text-2xl font-bold text-indigo-700 mb-4" style="font-family: 'Special Agent', sans-serif;">${data.title}</h2>`;
+        caseDetails.innerHTML = `<h2 class="text-2xl font-bold text-indigo-700 mb-4" style="font-family: 'Special Agent', sans-serif;">${data.title}</h2><p class="text-sm font-bold text-gray-700 mt-2">Score: ${score}/${currentCase+1}</p>`;
         await wait(500);
         const interrogationEl = document.createElement('div');
         interrogationEl.className = 'mt-4 p-2';
@@ -452,9 +499,9 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.choice-btn').forEach(btn => btn.classList.add('disabled'));
             score++; unit734.express('happy');
             
-            showPopup({type: 'correct', data: choice, onclose: async () => { 
-                unit734.exit(); 
-                await wait(800); 
+            showPopup({type: 'correct', data: choice, onclose: async () => {  
+                unit734.exit();  
+                await wait(800);  
                 currentCase++;
                 loadCase(currentCase);
             }});
@@ -470,8 +517,14 @@ document.addEventListener('DOMContentLoaded', () => {
         endScreen.classList.remove('hidden');
         document.getElementById('end-message').textContent = `You correctly solved ${score} out of ${caseFiles.length} cases.`;
         const passwordContainer = document.getElementById('password-container');
-        if (score >= caseFiles.length -1) { passwordContainer.classList.remove('hidden'); } 
-        else { passwordContainer.classList.add('hidden'); }
+        if (score === caseFiles.length) { 
+            passwordContainer.classList.remove('hidden'); 
+            lmsInstructions.classList.remove('hidden');
+        }  
+        else { 
+            passwordContainer.classList.add('hidden');
+            lmsInstructions.classList.add('hidden');
+        }
     }
 
     // --- Initializer ---
@@ -481,4 +534,3 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
-
