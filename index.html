@@ -3,140 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DevLife: Code & Consequences</title>
+    <title>Code Detectives: The JetBrains Case Files</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Special+Agent&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
     <style>
+        @font-face {
+            font-family: 'Special Agent';
+            src: url('https://fonts.cdnfonts.com/s/52003/SpecialAgent-RpvEa.woff') format('woff');
+        }
         body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #e0f2fe; /* Sky 100 */
+            font-family: 'Roboto Mono', monospace;
+            background-color: #4b5563; /* Slate 600 */
             overflow: hidden;
         }
-        .phone-container {
-            background: #1e293b; /* Slate 800 */
-            border-radius: 40px;
-            padding: 12px;
-            box-shadow: 0 0 50px rgba(0,0,0,0.3);
+        .case-file-container {
+            background-image: url('https://www.transparenttextures.com/patterns/lined-paper.png'), linear-gradient(to bottom right, #fdfbfb, #ebedee);
+            background-color: #f3f4f6; /* Gray 100 */
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4), inset 0 0 10px rgba(0,0,0,0.2);
             width: 100%;
-            max-width: 420px;
-            max-height: 95vh; /* Prevents it from being taller than the screen */
-        }
-        .phone-screen {
-            background-color: #f8fafc; /* Slate 50 */
-            border-radius: 28px;
-            width: 100%;
-            aspect-ratio: 9 / 19.5; /* Makes height responsive to width */
+            max-width: 1000px;
+            aspect-ratio: 16 / 10;
+            max-height: 95vh;
             overflow: hidden;
-            position: relative;
+            border: 10px solid #d1d5db; /* Gray 300 */
         }
         .hidden { display: none !important; }
 
         /* Animations */
-        @keyframes pop-in {
-            from { transform: scale(0.8); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
+        @keyframes clue-pop {
+            0% { transform: scale(0.5); opacity: 0; }
+            70% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
         }
-        @keyframes slide-in-up {
-            from { transform: translateY(50px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+        @keyframes clue-fade-out { to { opacity: 0; transform: scale(0.5); } }
+        @keyframes hover-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
-        @keyframes confetti-burst {
-            0% { transform: scale(0) rotate(0deg); opacity: 1; }
-            100% { transform: scale(1.5) rotate(360deg); opacity: 0; }
+        @keyframes code-scroll {
+            from { transform: translateY(0); }
+            to { transform: translateY(-100px); }
         }
-        @keyframes bonk {
-            0% { transform: scale(1) rotate(0); }
-            20% { transform: scale(1.2) rotate(-10deg); }
-            40% { transform: scale(1.2) rotate(10deg); }
-            60% { transform: scale(1.2) rotate(-10deg); }
-            100% { transform: scale(1) rotate(0); }
+
+        .clue-hotspot {
+            position: absolute;
+            cursor: pointer;
+            animation: clue-pop 0.5s ease-out forwards;
+            transition: opacity 0.3s, transform 0.3s;
         }
+        .clue-hotspot:hover .magnifying-glass { transform: scale(1.2) rotate(10deg); }
+        .clue-hotspot.found { animation: clue-fade-out 0.3s ease-out forwards; }
 
         /* Character Styles */
-        #kai-character {
+        #unit-734 {
             position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 300px;
-            height: 300px;
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            bottom: -20px;
+            transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+            width: 280px;  
+            height: 320px; 
         }
-        .face { transition: opacity 0.2s ease-in-out; }
+        #unit-734 .hover-idle { animation: hover-float 4s ease-in-out infinite; }
+        .face, .arm { transition: opacity 0.2s ease-in-out, transform 0.3s ease-out; }
 
         /* UI Elements */
-        .scenario-card {
-            background: white;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            animation: slide-in-up 0.5s ease-out forwards;
+        #scene { position: relative; }
+        #case-details {
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(5px);
+            border-left: 5px solid #4f46e5;
         }
-        .choice-bubble {
-            background: #e0f2fe;
-            border: 2px solid #93c5fd;
+        .choice-btn {
+            background: #fff;
+            border: 2px solid #6b7280;
             transition: all 0.2s ease;
         }
-        .choice-bubble:hover:not(.disabled) {
-            background: #dbeafe;
-            border-color: #60a5fa;
-            transform: scale(1.03);
+        .choice-btn:hover:not(.disabled) {
+            background: #e0e7ff;
+            border-color: #4f46e5;
         }
-        .choice-bubble.disabled { cursor: not-allowed; opacity: 0.5; }
+        .choice-btn.disabled { cursor: not-allowed; opacity: 0.5; }
+        .choice-btn.incorrect-choice {
+            background-color: #fee2e2;
+            border-color: #fca5a5;
+            text-decoration: line-through;
+        }
+        
+        #instruction-panel {
+            animation: clue-pop 0.5s 1s ease-out forwards;
+            opacity: 0;
+            position: absolute; 
+            bottom: 1rem; 
+            right: 1rem;   
+            transform: none;
+        }
+        
+        .typewriter-cursor::after {
+            content: '|';
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
 
-        #feedback-overlay {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            pointer-events: none;
+        .popup-anim {
+            animation: clue-pop 0.3s ease-out forwards;
         }
-        .confetti {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: red;
-            opacity: 0;
+         .popup-anim strong {
+            font-weight: 700;
+            color: #111827;
         }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
 
-    <div class="phone-container">
-        <div id="phone-screen" class="phone-screen flex flex-col">
-            <!-- Start Screen -->
-            <div id="start-screen" class="flex-1 flex flex-col items-center justify-center p-8 text-center">
-                <h1 class="text-4xl font-bold text-gray-800 mb-2">DevLife</h1>
-                <p class="text-lg text-gray-500 mb-8">Code & Consequences</p>
-                <button id="start-btn" class="bg-blue-500 text-white font-bold py-3 px-12 rounded-full text-xl hover:bg-blue-600 transition-all transform hover:scale-105">Play</button>
-            </div>
+    <div class="case-file-container flex flex-col">
+        <!-- Start Screen -->
+        <div id="start-screen" class="flex-1 flex flex-col items-center justify-center p-8 text-center bg-gray-200">
+            <h1 class="text-6xl font-bold text-gray-800 mb-2" style="font-family: 'Special Agent', sans-serif;">Code Detectives</h1>
+            <p class="text-xl text-gray-600 mb-8">The JetBrains Case Files</p>
+            <button id="start-btn" class="bg-indigo-600 text-white font-bold py-3 px-12 rounded-lg text-2xl hover:bg-indigo-700 transition-all transform hover:scale-105">Open the First Case</button>
+        </div>
 
-            <!-- Game Screen -->
-            <div id="game-screen" class="hidden flex-1 flex-col justify-between">
-                <div id="character-view" class="h-1/2 relative">
-                    <!-- Kai SVG will be injected here -->
-                    <div id="feedback-overlay"></div>
-                </div>
-                <div id="interaction-area" class="h-1/2 p-4 flex flex-col justify-center">
-                     <!-- Scenarios and choices will be injected here -->
-                </div>
-                 <div id="progress-bar" class="w-full bg-gray-200 h-1.5">
-                    <div id="progress-bar-inner" class="bg-green-400 h-1.5" style="width: 0%; transition: width 0.5s ease;"></div>
-                </div>
-            </div>
-             <!-- End Screen -->
-            <div id="end-screen" class="hidden flex-1 flex flex-col items-center justify-center p-8 text-center">
-                 <h1 class="text-3xl font-bold text-gray-800 mb-2">Day Complete!</h1>
-                 <div id="end-message" class="text-xl mb-6 text-gray-600"></div>
-                 <div id="password-container" class="hidden mt-4 p-4 bg-green-100 rounded-lg w-full">
-                     <p class="text-sm text-green-700">LMS COMPLETION CODE:</p>
-                     <p class="text-2xl mt-1 font-bold tracking-widest text-green-800">INTEGRITY2024</p>
-                 </div>
-                 <button id="restart-btn" class="mt-8 bg-blue-500 text-white font-bold py-3 px-12 rounded-full text-lg hover:bg-blue-600 transition-all transform hover:scale-105">Play Again</button>
-            </div>
+        <!-- Game Screen -->
+        <div id="game-screen" class="hidden flex-1 grid grid-cols-3 h-full">
+            <div id="scene" class="col-span-2 overflow-hidden"></div>
+            <div id="case-details" class="col-span-1 p-4 flex flex-col overflow-y-auto min-h-0"></div>
+        </div>
+        
+        <!-- End Screen -->
+        <div id="end-screen" class="hidden flex-1 flex flex-col items-center justify-center p-8 text-center bg-gray-200">
+             <h1 class="text-5xl font-bold text-gray-800 mb-4" style="font-family: 'Special Agent', sans-serif;">All Cases Closed</h1>
+             <div id="end-message" class="text-2xl mb-6 text-gray-700"></div>
+             <div id="password-container" class="hidden mt-4 p-4 bg-green-100 border-2 border-green-400 rounded-lg w-full max-w-md">
+                 <p class="text-md text-green-800">LMS COMPLETION CODE:</p>
+                 <p class="text-3xl mt-1 font-bold tracking-widest text-green-900">INTEGRITY2024</p>
+             </div>
+             <button id="restart-btn" class="mt-8 bg-indigo-600 text-white font-bold py-3 px-12 rounded-lg text-xl hover:bg-indigo-700">Re-open Cases</button>
         </div>
     </div>
 
@@ -148,217 +152,333 @@ document.addEventListener('DOMContentLoaded', () => {
     const endScreen = document.getElementById('end-screen');
     const startBtn = document.getElementById('start-btn');
     const restartBtn = document.getElementById('restart-btn');
-    const characterView = document.getElementById('character-view');
-    const interactionArea = document.getElementById('interaction-area');
-    const progressBar = document.getElementById('progress-bar-inner');
-    const feedbackOverlay = document.getElementById('feedback-overlay');
+    const scene = document.getElementById('scene');
+    const caseDetails = document.getElementById('case-details');
 
     // --- SVG Templates ---
-    const SVG_KAI = `
-        <svg id="kai-character" viewBox="0 0 300 300">
-            <g> <!-- Main Body -->
-                <path d="M 80,290 C 80,200 220,200 220,290 Z" fill="#60a5fa"/> <!-- Hoodie -->
-                <rect x="110" y="280" width="80" height="20" fill="#334155"/> <!-- Pants -->
-                <circle cx="150" cy="150" r="70" fill="#ffedd5"/> <!-- Head -->
-                <path d="M 100,80 Q 150,50 200,80 C 220,120 180,180 150,180 C 120,180 80,120 100,80 Z" fill="#1e293b"/> <!-- Hair -->
-                 <!-- Expressions -->
+    const SVG_UNIT734 = `
+        <svg id="unit-734" viewBox="0 0 350 400">
+            <g class="hover-idle">
+                <path d="M 100,200 a 75,100 0 1,0 150,0 l 20,150 h -190 z" fill="#d1d5db"/>
+                <path d="M 120,200 a 55,80 0 1,0 110,0" fill="#9ca3af"/>
+                <circle cx="175" cy="150" r="80" fill="#e5e7eb"/>
+                <circle cx="175" cy="150" r="65" fill="#000"/>
+                <rect x="235" y="60" width="10" height="40" fill="#9ca3af" transform="rotate(20, 240, 80)"/>
+                <circle cx="250" cy="55" r="10" fill="#ef4444"><animate attributeName="fill" values="#ef4444; #f59e0b; #ef4444" dur="2s" repeatCount="indefinite" /></circle>
                 <g id="face-neutral" class="face" style="opacity:1;">
-                    <ellipse cx="125" cy="150" rx="6" ry="10" fill="black"/>
-                    <ellipse cx="175" cy="150" rx="6" ry="10" fill="black"/>
-                    <path d="M 140,180 L 160,180" stroke="black" fill="none" stroke-width="3" stroke-linecap="round"/>
+                    <rect x="130" y="140" width="90" height="20" fill="#22c55e" rx="10"/>
                 </g>
                 <g id="face-happy" class="face" style="opacity:0;">
-                    <path d="M 120,145 C 125,155 130,155 130,145" stroke="black" fill="none" stroke-width="3"/>
-                    <path d="M 170,145 C 175,155 180,155 180,145" stroke="black" fill="none" stroke-width="3"/>
-                    <path d="M 140,175 Q 150,195 160,175" stroke="black" fill="none" stroke-width="3"/>
+                    <path d="M 130 150 C 150 170, 200 170, 220 150" stroke="#22c55e" stroke-width="8" fill="none" stroke-linecap="round"/>
                 </g>
-                <g id="face-worried" class="face" style="opacity:0;">
-                    <ellipse cx="125" cy="150" rx="6" ry="10" fill="black"/>
-                    <ellipse cx="175" cy="150" rx="6" ry="10" fill="black"/>
-                    <path d="M 140,185 Q 150,175 160,185" stroke="black" fill="none" stroke-width="3"/>
+                <g id="face-thinking" class="face" style="opacity:0;">
+                    <rect x="130" y="140" width="30" height="20" fill="#22c55e" rx="10"/>
+                    <rect x="190" y="140" width="30" height="20" fill="#22c55e" rx="10"/>
+                </g>
+                 <g id="face-worried" class="face" style="opacity:0;">
+                     <path d="M 140 160 L 160 140 L 175 160 L 190 140 L 210 160" stroke="#ef4444" stroke-width="8" fill="none" stroke-linecap="round"/>
                 </g>
             </g>
         </svg>`;
-    
+    const SVG_MAGNIFYING_GLASS = `<svg class="magnifying-glass w-16 h-16 text-yellow-400 transition-transform"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>`;
+
+    // --- Scene SVG Data ---
+    const SCENE_SVGS = {
+        hq: `<svg width="100%" height="100%" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+            <defs>
+                <radialGradient id="grad1" cx="50%" cy="50%" r="50%" fx="50%" fy="50%"><stop offset="0%" stop-color="#4338ca"/><stop offset="100%" stop-color="#1e1b4b"/></radialGradient>
+                 <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(129, 140, 248, 0.2)" stroke-width="1"/></pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grad1)"/><rect width="100%" height="100%" fill="url(#grid)"/>
+            <rect x="100" y="50" width="600" height="400" fill="rgba(0,0,0,0.3)" rx="20" stroke="rgba(165, 180, 252, 0.5)" stroke-width="2"/>
+            <text x="400" y="40" font-family="Roboto Mono, monospace" font-size="20" fill="#a5b4fc" text-anchor="middle">DETECTIVE HQ</text>
+            <path d="M120 100 C 200 150, 300 100, 400 150 S 600 200, 700 150" stroke="#a5b4fc" stroke-width="2" fill="none" stroke-dasharray="10 20"><animate attributeName="stroke-dashoffset" from="30" to="0" dur="2s" repeatCount="indefinite"/></path>
+            <path d="M120 300 C 250 250, 350 350, 500 300 S 650 250, 700 300" stroke="#a5b4fc" stroke-width="1" fill="none" stroke-dasharray="5 15"><animate attributeName="stroke-dashoffset" from="0" to="20" dur="3s" repeatCount="indefinite"/></path>
+        </svg>`,
+        codeReview: `<svg width="100%" height="100%" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+            <rect width="100%" height="100%" fill="#020617"/>
+            <rect x="50" y="50" width="330" height="500" fill="#1e293b" rx="10"/>
+            <foreignObject x="60" y="60" width="310" height="480">
+                <pre xmlns="http://www.w3.org/1999/xhtml" style="color: #94a3b8; font-size: 12px; white-space: pre-wrap;"><code>function processUser(user) {
+  // ...
+  if (user.isValid()) {
+    console.log('Processing...');
+    // A lot of important code here...
+  }
+}</code><animateTransform attributeName="transform" type="translate" from="0 0" to="0 -50" dur="8s" repeatCount="indefinite"/></pre>
+            </foreignObject>
+            <rect x="420" y="50" width="330" height="500" fill="#1e293b" rx="10"/>
+             <foreignObject x="430" y="60" width="310" height="480">
+                <pre xmlns="http://www.w3.org/1999/xhtml" style="color: #94a3b8; font-size: 12px; white-space: pre-wrap;"><code>function processUser(user) {
+  // ...
+  // @TODO: FIX LATER
+  // BUG: Bypassing validation for admins
+  if (user.isValid() || user.isAdmin) {
+    console.log('Processing...');
+    // ...
+  }
+}</code></pre>
+            </foreignObject>
+            <rect x="425" y="125" width="320" height="25" fill="#ef4444" fill-opacity="0.2" stroke="#ef4444" stroke-width="1"/>
+        </svg>`,
+    };
+
     // --- Game Data ---
-    const scenarioData = [
-        {
-            prompt: "Your teammate Anna DMs you: 'Hey, I found a huge bug but we ship in 5. I'm just gonna ignore it. We can't miss the deadline.'",
-            choices: [
-                { text: "lol just ship it 🚀", correct: false, feedback: "Whoops! Shipping a known bug violates our integrity principle. Trust is key!" },
-                { text: "OMG no, we have to report it now!", correct: true, feedback: "Great call! Prioritizing security builds customer trust." }
-            ]
-        },
-        {
-            prompt: "At lunch, your coworker makes a joke about another person's nationality. They look really uncomfortable. He DMs you: 'just a joke, right?'",
-            choices: [
-                { text: "Ngl, that was pretty awk...", correct: true, feedback: "Perfect. It's everyone's job to keep our workplace respectful." },
-                { text: "yeah whatever it was funny", correct: false, feedback: "Not a good look. We have a zero-tolerance policy for harassment or discrimination." }
-            ]
-        },
-        {
-            prompt: "You get a DM from sales: 'This client from a sanctioned country wants to pay through a different company to get around the rules. Big money. We in?'",
-            choices: [
-                { text: "Let's get that bag 🤑", correct: false, feedback: "Big fail! Bypassing sanctions is illegal and can have huge consequences." },
-                { text: "No way. Shut it down & tell Legal.", correct: true, feedback: "Exactly! Never break the law for a sale. Report it." }
-            ]
-        }
+    const caseFiles = [
+        { title: "The Case of the Critical Bug", briefing: "Our first case involves <strong>Trust and Integrity</strong>. Integrity means doing the right thing, even when no one is watching. Let's see what happens.", sceneSVG: SCENE_SVGS.codeReview, clues: [{ id: 'clue1-1', type: 'email', x: '10%', y: '45%', evidence: "<b>CASE LOG:</b> Email from manager says 'Release MUST go out today, no exceptions!'" }, { id: 'clue1-2', type: 'text', x: '80%', y: '20%', evidence: "<b>CASE LOG:</b> Code commit shows a vulnerability marked '@TODO: FIX LATER'." }], interrogation: "'Look, I saw the bug, but the deadline was tight. I figured I'd patch it next week. What was I supposed to do?'", choices: [{ text: "Your Response: 'You should have reported it immediately.'", correct: true, feedback: "By prioritizing transparency and security over a deadline, you protect our users and uphold the trust they place in JetBrains. This is the core of our <strong>Integrity</strong> principle." }, { text: "Your Response: 'You were right to prioritize the deadline.'", correct: false, feedback: "The principle of <strong>Integrity</strong> means we must be transparent about errors, especially those that impact security. Hiding a problem puts our users and our company's reputation at risk." }] },
+        // Placeholder for future cases
     ];
 
     // --- Game State & Animation ---
-    let currentScenario = 0;
-    let score = 0;
+    let currentCase = 0; score = 0; cluesFound = 0;
     const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
     let sfx;
 
     // --- Audio ---
     function initializeAudio() {
         sfx = {
-            start: new Tone.Synth({ oscillator: { type: 'triangle' } }).toDestination(),
-            correct: new Tone.PolySynth(Tone.Synth, { oscillator: { type: "sine" } }).toDestination(),
-            incorrect: new Tone.MetalSynth({ frequency: 50, envelope: { attack: 0.01, decay: 0.2 }, harmonicity: 2.1, modulationIndex: 32, resonance: 800 }).toDestination(),
-            click: new Tone.MembraneSynth({ pitchDecay: 0.01, octaves: 2 }).toDestination()
+            openCase: new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 } }).toDestination(),
+            clue: new Tone.MembraneSynth({ pitchDecay: 0.005, octaves: 10, envelope: { attack: 0.001, decay: 0.1, sustain: 0.01 } }).toDestination(),
+            stamp: new Tone.NoiseSynth({ noise: { type: 'brown' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.1 } }).toDestination(),
         };
     }
     
     function playSfx(type) {
         if (!sfx) return;
         if (Tone.context.state !== 'running') { Tone.start(); }
-        if (type === 'start') sfx.start.triggerAttackRelease("C5", "8n");
-        if (type === 'correct') sfx.correct.triggerAttackRelease(["C5", "E5", "G5"], "8n");
-        if (type === 'incorrect') sfx.incorrect.triggerAttackRelease("C2", "8n");
-        if (type === 'click') sfx.click.triggerAttackRelease("C2", "8n");
+        if (type === 'openCase') sfx.openCase.triggerAttackRelease("G2", "8n");
+        if (type === 'clue') sfx.clue.triggerAttackRelease("C5", "8n");
+        if (type === 'stamp') sfx.stamp.triggerAttackRelease("0.2s");
     }
 
-    // --- Kai Controller ---
-    const kai = {
+    // --- Unit 734 Controller ---
+    const unit734 = {
         element: null,
-        init() {
-            characterView.innerHTML = SVG_KAI;
-            this.element = document.getElementById('kai-character');
+        init() { 
+            const existing = document.getElementById('unit-734');
+            if(existing) existing.remove();
+            scene.innerHTML += SVG_UNIT734; 
+            this.element = document.getElementById('unit-734'); 
+            this.element.style.left = '-350px'; // Ensure it starts off-screen
+            this.element.style.right = 'auto';
+        },
+        enter(position = 'right') { 
+            if(!this.element) return;
+            if (position === 'right') {
+                this.element.style.left = 'auto';
+                this.element.style.right = '20px';
+            } else {
+                this.element.style.right = 'auto';
+                this.element.style.left = '50px';
+            }
         },
         express(mood) {
+            if (!this.element) return;
             this.element.querySelectorAll('.face').forEach(f => f.style.opacity = 0);
             this.element.querySelector(`#face-${mood}`).style.opacity = 1;
         },
-        react(correct) {
-            if (correct) {
-                this.express('happy');
-                this.element.style.transform = 'translateX(-50%) scale(1.1) rotate(5deg)';
-                showConfetti();
-            } else {
-                this.express('worried');
-                this.element.style.animation = 'bonk 0.5s ease';
-                this.element.addEventListener('animationend', () => this.element.style.animation = '', { once: true });
-            }
-        },
-        reset() {
-            this.express('neutral');
-            this.element.style.transform = 'translateX(-50%)';
+        exit() { 
+            if (!this.element) return;
+            this.element.style.left = '-350px'; 
+            this.element.style.right = 'auto';
         }
     };
     
-    function showConfetti() {
-        for (let i = 0; i < 30; i++) {
-            const confetti = document.createElement('div');
-            confetti.className = 'confetti';
-            const colors = ['#ef4444', '#f59e0b', '#22c55e', '#3b82f6', '#8b5cf6'];
-            confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
-            confetti.style.left = `${Math.random() * 100}%`;
-            confetti.style.top = `${Math.random() * 100}%`;
-            confetti.style.animation = `confetti-burst 0.8s ${Math.random() * 0.3}s ease-out forwards`;
-            feedbackOverlay.appendChild(confetti);
-            setTimeout(() => confetti.remove(), 1100);
+    // --- Typewriter Effect ---
+    async function typewriter(element, text, speed = 30) {
+        element.innerHTML = '';
+        element.classList.add('typewriter-cursor');
+        let i = 0;
+        while (i < text.length) {
+            if (text[i] === '<') {
+                let tagEnd = text.indexOf('>', i);
+                if (tagEnd !== -1) {
+                    element.innerHTML += text.substring(i, tagEnd + 1);
+                    i = tagEnd + 1;
+                    continue;
+                }
+            }
+            element.innerHTML += text[i];
+            i++;
+            await wait(speed);
         }
+        element.classList.remove('typewriter-cursor');
+    }
+    
+    function showPopup({ type, data, onclose }) {
+        const overlay = document.createElement('div');
+        overlay.className = 'absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20';
+        
+        let popupHTML;
+        if(type === 'email'){
+             popupHTML = `<div class="p-4 bg-gray-100 rounded-t-lg border-b"><p class="font-bold text-gray-800">From: Manager</p><p class="text-sm text-gray-600">Subject: URGENT: Release Today</p></div><div class="p-6"><p class="text-gray-700">Team, the release MUST go out today, no exceptions! The stakeholders are waiting.</p></div><div class="p-4 bg-gray-50 rounded-b-lg text-right"><button id="close-popup-btn" class="bg-indigo-600 text-white font-bold py-2 px-6 rounded-lg">Log as Evidence</button></div>`;
+        } else if (type === 'incorrect') {
+            popupHTML = `<div class="p-4 bg-red-100 rounded-t-lg border-b border-red-300"><p class="font-bold text-red-800">That's not the right call.</p></div><div class="p-6">${data.feedback}</div><div class="p-4 bg-gray-50 rounded-b-lg text-right"><button id="close-popup-btn" class="bg-red-600 text-white font-bold py-2 px-6 rounded-lg">Try Another Lead</button></div>`;
+        } else if (type === 'correct') {
+            popupHTML = `<div class="p-4 bg-green-100 rounded-t-lg border-b border-green-300"><p class="font-bold text-green-800">Conclusion: Correct!</p></div><div class="p-6">${data.feedback}</div><div class="p-4 bg-gray-50 rounded-b-lg text-right"><button id="close-popup-btn" class="bg-gray-800 text-white font-bold py-2 px-6 rounded-lg">Next Simulation</button></div>`;
+        }
+
+
+        const popup = document.createElement('div');
+        popup.className = 'popup-anim bg-white rounded-lg shadow-2xl w-full max-w-lg border-2 border-gray-300';
+        popup.innerHTML = popupHTML;
+
+        overlay.appendChild(popup);
+        scene.appendChild(overlay);
+        document.getElementById('close-popup-btn').addEventListener('click', () => {
+            overlay.remove();
+            if(onclose) onclose();
+        }, { once: true });
     }
 
     // --- Game Flow ---
-    function startGame() {
-        playSfx('start');
+    async function startGame() {
+        if (!sfx) initializeAudio();
+        playSfx('openCase');
         startScreen.classList.add('hidden');
         endScreen.classList.add('hidden');
-        gameScreen.style.display = 'flex';
-        kai.init();
-        currentScenario = 0;
-        score = 0;
-        loadScenario(currentScenario);
+        gameScreen.classList.remove('hidden');
+        currentCase = 0; score = 0;
+        await loadIntro();
+    }
+    
+    async function loadIntro() {
+        scene.innerHTML = SCENE_SVGS.hq;
+        unit734.init();
+        caseDetails.innerHTML = `<h2 class="text-2xl font-bold text-indigo-700 mb-4" style="font-family: 'Special Agent', sans-serif;">System Boot</h2><div id="dialogue-box" class="space-y-4"></div>`;
+        await wait(500);
+        unit734.enter('left'); 
+        unit734.express('neutral');
+        const dialogueBox = document.getElementById('dialogue-box');
+        const p1 = document.createElement('p'); dialogueBox.appendChild(p1);
+        await typewriter(p1, "Greetings. I am Unit 734, your assigned field analyst.");
+        const p2 = document.createElement('p'); dialogueBox.appendChild(p2);
+        await typewriter(p2, "My function is to assist you in upholding the JetBrains Code of Conduct.");
+        const p3 = document.createElement('p'); dialogueBox.appendChild(p3);
+        await typewriter(p3, "Our first case file is ready for review. Shall we proceed?");
+        dialogueBox.innerHTML += `<button id="start-case-btn" class="mt-4 w-full bg-gray-800 text-white font-bold py-2 px-6 rounded-lg">Open Case File</button>`;
+        document.getElementById('start-case-btn').onclick = async () => { unit734.exit(); await wait(800); loadCase(0); };
     }
 
-    function loadScenario(index) {
-        kai.reset();
-        progressBar.style.width = `${(index / scenarioData.length) * 100}%`;
-        const data = scenarioData[index];
-        interactionArea.innerHTML = `
-            <div class="scenario-card p-4 rounded-xl w-full">
-                <p class="text-gray-500 text-sm">New Message</p>
-                <p class="text-gray-800 font-bold">${data.prompt}</p>
-            </div>
-            <div id="choices-container" class="mt-4 w-full flex flex-col items-center gap-3">
-                ${data.choices.map(c => `<button class="choice-bubble w-full p-3 rounded-full text-blue-800 font-semibold">${c.text}</button>`).join('')}
-            </div>
-        `;
-        const choiceButtons = interactionArea.querySelectorAll('.choice-bubble');
-        choiceButtons.forEach((btn, i) => {
-            btn.onclick = () => handleChoice(data.choices[i], choiceButtons);
+    async function loadCase(index) {
+        if(index >= caseFiles.length) {
+            endGame();
+            return;
+        }
+        const data = caseFiles[index];
+        cluesFound = 0;
+        scene.innerHTML = ''; 
+        if (data.sceneSVG) { scene.innerHTML = data.sceneSVG; } 
+        else { scene.style.backgroundImage = data.sceneBg; }
+        unit734.init();
+        caseDetails.innerHTML = `<h2 class="text-2xl font-bold text-indigo-700 mb-4" style="font-family: 'Special Agent', sans-serif;">${data.title}</h2><div id="briefing-box" class="p-2 bg-blue-100 border border-blue-300 rounded text-sm mb-4"></div><div id="clue-log" class="space-y-2"></div>`;
+        await wait(500); unit734.enter('right'); unit734.express('thinking');
+        const briefingBox = document.getElementById('briefing-box');
+        await typewriter(briefingBox, data.briefing);
+
+        const instructionPanel = document.createElement('div');
+        instructionPanel.id = 'instruction-panel';
+        instructionPanel.className = 'absolute bg-yellow-200 p-2 rounded-lg shadow-lg border-2 border-yellow-400 text-center opacity-75';
+        instructionPanel.innerHTML = `<p class="font-bold text-yellow-800 text-sm">Find Clues!</p>`;
+        scene.appendChild(instructionPanel);
+
+        data.clues.forEach(clue => {
+            const hotspot = document.createElement('div');
+            hotspot.className = 'clue-hotspot'; hotspot.id = clue.id;
+            hotspot.style.left = clue.x; hotspot.style.top = clue.y;
+            hotspot.innerHTML = SVG_MAGNIFYING_GLASS;
+            hotspot.onclick = () => findClue(clue, data.clues.length);
+            scene.appendChild(hotspot);
         });
     }
 
-    async function handleChoice(choice, buttons) {
-        playSfx('click');
-        buttons.forEach(btn => btn.classList.add('disabled'));
-        kai.react(choice.correct);
-        
-        if(choice.correct) {
-            score++;
-            playSfx('correct');
-        } else {
-            playSfx('incorrect');
-        }
+    function findClue(clueData, totalClues) {
+        const instructionPanel = document.getElementById('instruction-panel');
+        if(instructionPanel) instructionPanel.style.display = 'none';
 
-        interactionArea.innerHTML += `
-            <div class="scenario-card p-4 rounded-xl w-full mt-4 text-center pop-in">
-                <p class="font-bold ${choice.correct ? 'text-green-500' : 'text-red-500'}">${choice.correct ? "NICE!" : "YIKES."}</p>
-                <p class="text-gray-600">${choice.feedback}</p>
-                <button id="next-btn" class="mt-3 bg-gray-800 text-white font-bold py-2 px-6 rounded-full">Next ></button>
-            </div>
-        `;
-        document.getElementById('next-btn').onclick = () => {
-             playSfx('click');
-            currentScenario++;
-            if (currentScenario < scenarioData.length) {
-                loadScenario(currentScenario);
-            } else {
-                endGame();
-            }
+        const hotspot = document.getElementById(clueData.id);
+        if (hotspot.classList.contains('found')) return;
+        
+        const logEvidence = () => {
+            hotspot.style.animation = 'clue-fade-out 0.3s ease-out forwards';
+            setTimeout(() => hotspot.remove(), 300);
+            cluesFound++;
+            const clueLog = document.getElementById('clue-log');
+            clueLog.innerHTML += `<p class="p-2 bg-yellow-100 border border-yellow-300 rounded text-sm pop-in">${clueData.evidence}</p>`;
+            caseDetails.scrollTop = caseDetails.scrollHeight;
+            if (cluesFound === totalClues) { unit734.express('neutral'); presentInterrogation(caseFiles[currentCase]); }
         };
+        if(clueData.type === 'email'){ showPopup({type: 'email', data: clueData, onclose: logEvidence }); } 
+        else { logEvidence(); }
+    }
+    
+    async function presentInterrogation(data) {
+        caseDetails.innerHTML = `<h2 class="text-2xl font-bold text-indigo-700 mb-4" style="font-family: 'Special Agent', sans-serif;">${data.title}</h2>`;
+        await wait(500);
+        const interrogationEl = document.createElement('div');
+        interrogationEl.className = 'mt-4 p-2';
+        caseDetails.appendChild(interrogationEl);
+
+        const titleEl = document.createElement('p');
+        titleEl.className = 'text-sm font-bold text-gray-700 mt-2';
+        interrogationEl.appendChild(titleEl);
+        await typewriter(titleEl, 'CONNECT THE CLUES:');
+        
+        const promptEl = document.createElement('p');
+        promptEl.className = 'mt-2 text-gray-800 italic';
+        interrogationEl.appendChild(promptEl);
+        await typewriter(promptEl, `Suspect says: "${data.interrogation}"`);
+
+        const questionEl = document.createElement('p');
+        questionEl.className = 'mt-4 font-bold text-indigo-700';
+        interrogationEl.appendChild(questionEl);
+        await typewriter(questionEl, "How do you respond, Detective?");
+
+        const choicesContainer = document.createElement('div');
+        choicesContainer.id = 'choices-container'; choicesContainer.className = 'mt-2 space-y-2';
+        interrogationEl.appendChild(choicesContainer);
+        data.choices.forEach(choice => {
+            const button = document.createElement('button');
+            button.className = 'choice-btn w-full p-3 rounded-lg text-left font-semibold';
+            button.textContent = choice.text;
+            button.onclick = (e) => handleChoice(choice, e.currentTarget);
+            choicesContainer.appendChild(button);
+        });
+        caseDetails.scrollTop = caseDetails.scrollHeight;
     }
 
-    function endGame() {
-        progressBar.style.width = '100%';
-        const pass = score >= scenarioData.length - 1;
-        gameScreen.style.display = 'none';
-        endScreen.classList.remove('hidden');
-
-        document.getElementById('end-message').textContent = `You scored ${score}/${scenarioData.length}.`;
-        const passwordContainer = document.getElementById('password-container');
-        if (pass) {
-            playSfx('correct');
-            passwordContainer.classList.remove('hidden');
+    async function handleChoice(choice, buttonEl) {
+        if (choice.correct) {
+            document.querySelectorAll('.choice-btn').forEach(btn => btn.classList.add('disabled'));
+            score++; unit734.express('happy');
+            
+            showPopup({type: 'correct', data: choice, onclose: async () => { 
+                unit734.exit(); 
+                await wait(800); 
+                currentCase++;
+                loadCase(currentCase);
+            }});
         } else {
-            playSfx('incorrect');
-            passwordContainer.classList.add('hidden');
+            buttonEl.classList.add('disabled', 'incorrect-choice');
+            unit734.express('worried');
+            showPopup({type: 'incorrect', data: choice});
         }
+    }
+    
+    function endGame() {
+        gameScreen.classList.add('hidden');
+        endScreen.classList.remove('hidden');
+        document.getElementById('end-message').textContent = `You correctly solved ${score} out of ${caseFiles.length} cases.`;
+        const passwordContainer = document.getElementById('password-container');
+        if (score >= caseFiles.length -1) { passwordContainer.classList.remove('hidden'); } 
+        else { passwordContainer.classList.add('hidden'); }
     }
 
     // --- Initializer ---
-    startBtn.addEventListener('click', () => {
-        if (!sfx) initializeAudio();
-        startGame();
-    });
+    startBtn.addEventListener('click', startGame);
     restartBtn.addEventListener('click', startGame);
 });
 </script>
 </body>
 </html>
-
 
