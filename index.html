@@ -90,7 +90,11 @@
             background: #e0e7ff;
             border-color: #4f46e5;
         }
-        .choice-btn.disabled { cursor: not-allowed; opacity: 0.5; }
+        .choice-btn.disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+            pointer-events: none;
+        }
         .choice-btn.incorrect-choice {
             background-color: #fee2e2;
             border-color: #fca5a5;
@@ -497,17 +501,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function handleChoice(choice, buttonEl) {
         if (choice.correct) {
-            document.querySelectorAll('.choice-btn').forEach(btn => btn.classList.add('disabled'));
+            document.querySelectorAll('.choice-btn').forEach(btn => {
+                btn.classList.add('disabled');
+                btn.setAttribute('disabled', 'disabled');
+            });
             score++; unit734.express('happy');
-            
-            showPopup({type: 'correct', data: choice, onclose: async () => {  
-                unit734.exit();  
-                await wait(800);  
+
+            showPopup({type: 'correct', data: choice, onclose: async () => {
+                unit734.exit();
+                await wait(800);
                 currentCase++;
                 loadCase(currentCase);
             }});
         } else {
             buttonEl.classList.add('disabled', 'incorrect-choice');
+            buttonEl.setAttribute('disabled', 'disabled');
             unit734.express('worried');
             showPopup({type: 'incorrect', data: choice});
         }
