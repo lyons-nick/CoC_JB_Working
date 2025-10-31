@@ -1,681 +1,642 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Code Detectives: The JetBrains Case Files</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Special+Agent&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet"/>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
-  <style>
-    @font-face {
-      font-family: 'Special Agent';
-      src: url('https://fonts.cdnfonts.com/s/52003/SpecialAgent-RpvEa.woff') format('woff');
-    }
-    body {
-      font-family: 'Roboto Mono', monospace;
-      background-color: #4b5563; /* Slate 600 */
-      overflow: hidden;
-    }
-    .case-file-container {
-      background-image: url('https://www.transparenttextures.com/patterns/lined-paper.png'), linear-gradient(to bottom right, #fdfbfb, #ebedee);
-      background-color: #f3f4f6; /* Gray 100 */
-      border-radius: 20px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.4), inset 0 0 10px rgba(0,0,0,0.2);
-      width: 100%;
-      max-width: 1000px;
-      aspect-ratio: 16 / 10;
-      max-height: 95vh;
-      overflow: hidden;
-      border: 10px solid #d1d5db; /* Gray 300 */
-    }
-    .hidden { display: none !important; }
-
-    /* Animations */
-    @keyframes clue-pop {
-      0% { transform: scale(0.5); opacity: 0; }
-      70% { transform: scale(1.1); }
-      100% { transform: scale(1); opacity: 1; }
-    }
-    @keyframes clue-fade-out { to { opacity: 0; transform: scale(0.5); } }
-    @keyframes hover-float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
-    }
-    @keyframes code-scroll {
-      from { transform: translateY(0); }
-      to { transform: translateY(-100px); }
-    }
-
-    .clue-hotspot {
-      position: absolute;
-      cursor: pointer;
-      animation: clue-pop 0.5s ease-out forwards;
-      transition: opacity 0.3s, transform 0.3s;
-    }
-    .clue-hotspot:hover .magnifying-glass { transform: scale(1.2) rotate(10deg); }
-    .clue-hotspot.found { animation: clue-fade-out 0.3s ease-out forwards; }
-
-    /* Character Styles */
-    #unit-734 {
-      position: absolute;
-      bottom: -20px;
-      transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
-      width: 280px;
-      height: 320px;
-    }
-    #unit-734 .hover-idle { animation: hover-float 4s ease-in-out infinite; }
-    .face, .arm { transition: opacity 0.2s ease-in-out, transform 0.3s ease-out; }
-
-    /* UI Elements */
-    #scene { position: relative; }
-    #case-details {
-      background: rgba(255,255,255,0.85);
-      backdrop-filter: blur(5px);
-      border-left: 5px solid #4f46e5;
-    }
-    .choice-btn {
-      background: #fff;
-      border: 2px solid #6b7280;
-      transition: all 0.2s ease;
-    }
-    .choice-btn:hover:not(.disabled) {
-      background: #e0e7ff;
-      border-color: #4f46e5;
-    }
-    .choice-btn.disabled { cursor: not-allowed; opacity: 0.5; }
-    .choice-btn.incorrect-choice {
-      background-color: #fee2e2;
-      border-color: #fca5a5;
-      text-decoration: line-through;
-    }
-
-    #instruction-panel {
-      animation: clue-pop 0.5s 1s ease-out forwards;
-      opacity: 0;
-      position: absolute;
-      bottom: 1rem;
-      right: 1rem;
-      transform: none;
-    }
-
-    .typewriter-cursor::after {
-      content: '|';
-      animation: blink 1s step-end infinite;
-    }
-    @keyframes blink { 50% { opacity: 0; } }
-
-    .popup-anim {
-      animation: clue-pop 0.3s ease-out forwards;
-    }
-    .popup-anim strong {
-      font-weight: 700;
-      color: #111827;
-    }
-
-    /* -------- Email-style popup (NEW helper styles) -------- */
-    .email-modal .email-header {
-      display: grid;
-      grid-template-columns: auto 1fr;
-      gap: .5rem 1rem;
-      font-size: .9rem;
-      color: #374151;
-    }
-    .email-modal .label { font-weight: 700; color: #111827; }
-    .email-modal .subject { font-weight: 700; color: #111827; margin-top: .25rem; }
-    .email-modal .toolbar {
-      display:flex; gap:.5rem; align-items:center;
-      padding:.5rem; border-bottom:1px solid #e5e7eb; background:#f9fafb;
-    }
-    .email-modal .dot { width:10px; height:10px; border-radius:50%; background:#9ca3af; }
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Code Detectives: The JetBrains Case Files — Full Course</title>
+<style>
+:root{
+  --jb-purple:#9146FF; --jb-purple-2:#6B2CFF;
+  --jb-dark:#0E121A; --jb-mid:#1B2230; --jb-panel:#111827;
+  --jb-text:#E5E7EB; --jb-sub:#9CA3AF; --jb-line:#2B3446;
+  --ok:#22C55E; --warn:#F59E0B; --bad:#EF4444; --info:#60A5FA;
+  --paper:#F5F7FA;
+}
+body{margin:0;background:#2f3747;font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial;color:var(--jb-text);overflow:hidden}
+.app{max-width:1160px;height:95vh;aspect-ratio:16/10;margin:auto;border-radius:22px;border:10px solid #9CA3AF;overflow:hidden;
+  box-shadow:0 18px 60px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,255,255,.05);
+  background:radial-gradient(1200px 600px at 110% -10%,rgba(145,70,255,.22),transparent),
+  radial-gradient(1200px 600px at -10% 110%,rgba(34,197,94,.14),transparent),
+  linear-gradient(145deg,rgba(8,11,19,.95),rgba(25,32,47,.95))}
+.hidden{display:none!important}
+.row{display:grid;grid-template-columns:2fr 1fr;height:100%}
+.center{display:flex;align-items:center;justify-content:center}
+#start,#end{background:linear-gradient(180deg,#E5E7EB,#F3F4F6);color:#111827}
+#start h1{font-size:3rem;margin:.25rem 0 0}
+#start p{color:#4B5563;margin:.5rem 0 1.5rem}
+#end h2{font-size:2.2rem;margin:.4rem 0}
+#scene{position:relative;background:#0B1020;overflow:hidden}
+#panel{background:rgba(255,255,255,.94);color:#111827;border-left:6px solid var(--jb-purple);padding:16px;
+  display:flex;flex-direction:column;min-height:0;overflow:auto}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.panel-title{font-weight:800;color:#4f46e5}
+.panel-tag{background:#111827;color:#fff;border-radius:8px;padding:.2rem .55rem;font-size:.74rem}
+.panel-body{margin-top:.5rem}
+.box{background:#EEF2FF;border:1px solid #CBD5E1;border-radius:10px;padding:10px}
+.log{margin-top:8px}
+.btn{background:var(--jb-purple);color:#fff;border:none;border-radius:12px;padding:.85rem 1.5rem;font-weight:800;cursor:pointer;transition:filter .15s,transform .02s}
+.btn:hover{filter:brightness(1.07)}
+.btn:active{transform:translateY(1px)}
+.btn.secondary{background:#111827;border:1px solid #374151;color:#E5E7EB}
+.choice{background:#fff;border:2px solid #9CA3AF;border-radius:10px;padding:.75rem;text-align:left;cursor:pointer;transition:background .15s,border-color .15s;display:block;width:100%}
+.choice:hover{border-color:var(--jb-purple);background:#EEF2FF}
+.choice.disabled{opacity:.55;cursor:not-allowed}
+.choice.incorrect{background:#FEE2E2;border-color:#FCA5A5;text-decoration:line-through}
+#instruction{position:absolute;bottom:1rem;right:1rem;background:#FEF3C7;border:2px solid #F59E0B;border-radius:10px;
+  padding:.45rem .6rem;font-weight:800;color:#78350F;opacity:.95;z-index:3}
+.overlay{position:absolute;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:40}
+.popup{background:#fff;border:2px solid #D1D5DB;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.4);max-width:720px;width:92%;color:#111827}
+.popup .hd{padding:.7rem .9rem;border-bottom:2px solid #E5E7EB;border-radius:12px 12px 0 0;font-weight:900}
+.popup .bd{padding:1rem .95rem;line-height:1.55}
+.popup .ft{padding:.85rem .95rem;background:#F9FAFB;border-radius:0 0 12px 12px;text-align:right}
+.fade{position:absolute;inset:0;opacity:0;transition:opacity .55s ease}
+.fade.show{opacity:1}
+.scene-title{position:absolute;top:10px;left:50%;transform:translateX(-50%);color:#a5b4fc;font-weight:800;letter-spacing:.06em;z-index:2;font-size:.9rem;text-shadow:0 2px 6px rgba(0,0,0,.5)}
+#unit-734{position:absolute;bottom:-6px;left:-340px;width:280px;height:320px;transition:all .8s cubic-bezier(.25,1,.5,1);z-index:3}
+#unit-734 .hover-idle{animation:hover 4s ease-in-out infinite}
+@keyframes hover{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.face{transition:opacity .2s ease}
+.hot{position:absolute;cursor:pointer;z-index:4;transition:transform .15s}
+.hot:hover{transform:scale(1.08)}
+.hot svg{filter:drop-shadow(0 4px 10px rgba(0,0,0,.55))}
+.list{margin:.25rem 0 .5rem 1.2rem}
+</style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
-
-  <div class="case-file-container flex flex-col">
-    <!-- Start Screen -->
-    <div id="start-screen" class="flex-1 flex flex-col items-center justify-center p-8 text-center bg-gray-200">
-      <h1 class="text-6xl font-bold text-gray-800 mb-2" style="font-family: 'Special Agent', sans-serif;">Code Detectives</h1>
-      <p class="text-xl text-gray-600 mb-8">The JetBrains Case Files</p>
-      <button id="start-btn" class="bg-indigo-600 text-white font-bold py-3 px-12 rounded-lg text-2xl hover:bg-indigo-700 transition-all transform hover:scale-105">Open the First Case</button>
-    </div>
-
-    <!-- Game Screen -->
-    <div id="game-screen" class="hidden flex-1 grid grid-cols-3 h-full">
-      <div id="scene" class="col-span-2 overflow-hidden"></div>
-      <div id="case-details" class="col-span-1 p-4 flex flex-col overflow-y-auto min-h-0"></div>
-    </div>
-
-    <!-- End Screen -->
-    <div id="end-screen" class="hidden flex-1 flex flex-col items-center justify-center p-8 text-center bg-gray-200">
-      <h1 class="text-5xl font-bold text-gray-800 mb-4" style="font-family: 'Special Agent', sans-serif;">All Cases Closed</h1>
-      <div id="end-message" class="text-2xl mb-6 text-gray-700"></div>
-      <div id="password-container" class="hidden mt-4 p-4 bg-green-100 border-2 border-green-400 rounded-lg w-full max-w-md">
-        <p class="text-md text-green-800">LMS COMPLETION CODE:</p>
-        <p class="text-3xl mt-1 font-bold tracking-widest text-green-900">INTEGRITY2024</p>
-      </div>
-      <button id="restart-btn" class="mt-8 bg-indigo-600 text-white font-bold py-3 px-12 rounded-lg text-xl hover:bg-indigo-700">Re-open Cases</button>
-    </div>
+<body>
+<div class="app">
+<section id="start" class="center" style="height:100%;flex-direction:column;text-align:center;padding:18px">
+  <h1>Code Detectives</h1>
+  <p>The JetBrains Case Files</p>
+  <button id="start-btn" class="btn" style="font-size:1.1rem">Initiate System Boot</button>
+</section>
+<section id="game" class="hidden row">
+  <div id="scene"></div>
+  <aside id="panel"></aside>
+</section>
+<section id="end" class="hidden center" style="flex-direction:column;padding:20px;text-align:center">
+  <h2>All Cases Closed</h2>
+  <div id="end-msg" style="color:#374151;margin:.25rem 0 1rem"></div>
+  <div id="password-wrap" class="hidden" style="background:#DCFCE7;border:2px solid #86EFAC;border-radius:12px;padding:10px 14px;color:#064E3B">
+    <div style="font-size:.9rem;">LMS COMPLETION CODE:</div>
+    <div style="font-size:1.8rem;font-weight:900;letter-spacing:.18em;margin-top:4px">INTEGRITY2024</div>
   </div>
-
+  <button id="restart-btn" class="btn" style="margin-top:16px">Re-open Cases</button>
+</section>
+</div>
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  // --- DOM Elements ---
-  const startScreen = document.getElementById('start-screen');
-  const gameScreen = document.getElementById('game-screen');
-  const endScreen = document.getElementById('end-screen');
-  const startBtn = document.getElementById('start-btn');
-  const restartBtn = document.getElementById('restart-btn');
-  const scene = document.getElementById('scene');
-  const caseDetails = document.getElementById('case-details');
+/* ========== Minimal Audio ========== */
+const AudioKit=(()=>{let ctx=null;function ensure(){if(!ctx)ctx=new(window.AudioContext||window.webkitAudioContext)();return ctx;}
+function beep(freq=440,dur=0.14,type='sine',gain=0.05){const c=ensure();const o=c.createOscillator();const g=c.createGain();
+o.type=type;o.frequency.value=freq;g.gain.value=gain;o.connect(g).connect(c.destination);o.start();o.stop(c.currentTime+dur);}
+return{open:()=>beep(196,0.18,'sawtooth',0.05),blip:()=>beep(880,0.10,'square',0.04),ok:()=>beep(554.37,0.16,'triangle',0.05),bad:()=>beep(110,0.22,'sawtooth',0.06)};})();
 
-  // --- SVG Templates ---
-  const SVG_UNIT734 = `
-  <svg id="unit-734" viewBox="0 0 350 400" aria-hidden="true">
-    <g class="hover-idle">
-      <path d="M 100,200 a 75,100 0 1,0 150,0 l 20,150 h -190 z" fill="#d1d5db"/>
-      <path d="M 120,200 a 55,80 0 1,0 110,0" fill="#9ca3af"/>
-      <circle cx="175" cy="150" r="80" fill="#e5e7eb"/>
-      <circle cx="175" cy="150" r="65" fill="#000"/>
-      <rect x="235" y="60" width="10" height="40" fill="#9ca3af" transform="rotate(20, 240, 80)"/>
-      <circle cx="250" cy="55" r="10" fill="#ef4444">
-        <animate attributeName="fill" values="#ef4444; #f59e0b; #ef4444" dur="2s" repeatCount="indefinite" />
-      </circle>
-      <g id="face-neutral" class="face" style="opacity:1;">
-        <rect x="130" y="140" width="90" height="20" fill="#22c55e" rx="10"/>
-      </g>
-      <g id="face-happy" class="face" style="opacity:0;">
-        <path d="M 130 150 C 150 170, 200 170, 220 150" stroke="#22c55e" stroke-width="8" fill="none" stroke-linecap="round"/>
-      </g>
-      <g id="face-thinking" class="face" style="opacity:0;">
-        <rect x="130" y="140" width="30" height="20" fill="#22c55e" rx="10"/>
-        <rect x="190" y="140" width="30" height="20" fill="#22c55e" rx="10"/>
-      </g>
-      <g id="face-worried" class="face" style="opacity:0;">
-        <path d="M 140 160 L 160 140 L 175 160 L 190 140 L 210 160" stroke="#ef4444" stroke-width="8" fill="none" stroke-linecap="round"/>
-      </g>
+/* ========== SVGs ========== */
+const SVG_734=`<svg id="unit-734" viewBox="0 0 350 400"><g class="hover-idle">
+<path d="M 100,200 a 75,100 0 1,0 150,0 l 20,150 h -190 z" fill="#d1d5db"/>
+<path d="M 120,200 a 55,80 0 1,0 110,0" fill="#9ca3af"/>
+<circle cx="175" cy="150" r="80" fill="#e5e7eb"/><circle cx="175" cy="150" r="65" fill="#000"/>
+<circle cx="250" cy="55" r="10" fill="#ef4444"><animate attributeName="fill" values="#ef4444;#f59e0b;#ef4444" dur="2s" repeatCount="indefinite"/></circle>
+<g id="face-neutral" class="face" style="opacity:1"><rect x="130" y="140" width="90" height="20" fill="#22c55e" rx="10"/></g>
+<g id="face-happy" class="face" style="opacity:0"><path d="M130 150 C150 170,200 170,220 150" stroke="#22c55e" stroke-width="8" fill="none" stroke-linecap="round"/></g>
+<g id="face-thinking" class="face" style="opacity:0"><rect x="130" y="140" width="30" height="20" fill="#22c55e" rx="10"/><rect x="190" y="140" width="30" height="20" fill="#22c55e" rx="10"/></g>
+<g id="face-worried" class="face" style="opacity:0"><path d="M140 160 L160 140 L175 160 L190 140 L210 160" stroke="#ef4444" stroke-width="8" fill="none" stroke-linecap="round"/></g></g></svg>`;
+const MAG=`<svg viewBox="0 0 24 24" width="46" height="46" fill="none" stroke="#FACC15" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>`;
+/* ======== Background Scenes (static, full-bleed) ======== */
+const SCENE={
+  hq:`<svg class="w h" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#1f2937"/><stop offset="100%" stop-color="#0b1220"/>
+      </linearGradient>
+    </defs>
+    <rect width="800" height="600" fill="url(#g1)"/>
+    <rect x="80" y="60" width="640" height="380" rx="18" fill="rgba(0,0,0,0.35)" stroke="#6b7280"/>
+    <rect x="110" y="90" width="280" height="300" rx="8" fill="#0b1220" stroke="#4b5563"/>
+    <rect x="410" y="90" width="280" height="300" rx="8" fill="#0b1220" stroke="#4b5563"/>
+    <g fill="#93c5fd" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="11">
+      <text x="120" y="115">function processUser(u){</text>
+      <text x="120" y="132"> if(u.isValid()){ log('OK'); }</text>
+      <text x="120" y="149">}</text>
+      <text x="420" y="115">function processUser(u){</text>
+      <text x="420" y="132"> //@TODO: FIX LATER</text>
+      <text x="420" y="149"> if(u.isValid() || u.isAdmin){ log('OK'); }</text>
+      <text x="420" y="166">}</text>
     </g>
-  </svg>`;
+    <rect x="415" y="135" width="270" height="22" fill="rgba(239,68,68,.25)" stroke="#ef4444"/>
+    <g stroke="rgba(145,70,255,.18)" stroke-width="1">
+      ${Array.from({length:30}).map((_,i)=>`<line x1="${i*26}" y1="0" x2="${i*26}" y2="600"/>`).join('')}
+      ${Array.from({length:24}).map((_,i)=>`<line y1="${i*25}" x1="0" y2="${i*25}" x2="800"/>`).join('')}
+    </g>
+  </svg>`,
+  cafeteria:`<svg class="w h" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#c7d2fe"/><stop offset="100%" stop-color="#e0e7ff"/></linearGradient>
+      <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#e5e7eb"/><stop offset="100%" stop-color="#d1d5db"/></linearGradient>
+    </defs>
+    <rect width="800" height="600" fill="#f9fafb"/>
+    <rect y="430" width="800" height="170" fill="url(#floor)"/>
+    <rect x="50" y="50" width="700" height="320" rx="10" fill="url(#sky)"/>
+    <g fill="#d1d5db">
+      <rect x="70" y="260" width="100" height="140"/><rect x="190" y="230" width="140" height="170"/>
+      <rect x="350" y="280" width="80" height="120"/><rect x="450" y="200" width="180" height="200"/>
+      <rect x="650" y="260" width="80" height="140"/>
+    </g>
+    <rect x="40" y="40" width="720" height="360" fill="none" stroke="#9ca3af" stroke-width="18" rx="10"/>
+    <g transform="translate(180,450)"><rect width="140" height="60" rx="8" fill="#9ca3af"/><rect x="10" y="10" width="120" height="40" rx="6" fill="#1e293b"/></g>
+    <g transform="translate(380,460)"><rect width="140" height="60" rx="8" fill="#9ca3af"/><rect x="10" y="10" width="120" height="40" rx="6" fill="#1e293b"/></g>
+    <g><rect x="120" y="120" width="180" height="40" rx="10" fill="#F1F5F9" stroke="#E5E7EB"/>
+       <rect x="350" y="170" width="210" height="40" rx="10" fill="#EEF2FF" stroke="#CBD5E1"/></g>
+  </svg>`,
+  map:`<svg class="w h" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+    <defs><linearGradient id="mg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0b1220"/><stop offset="100%" stop-color="#0f172a"/></linearGradient></defs>
+    <rect width="800" height="600" fill="url(#mg)"/>
+    <g fill="#334155" opacity=".9">
+      <ellipse cx="200" cy="220" rx="140" ry="80"/><ellipse cx="420" cy="240" rx="160" ry="90"/><ellipse cx="640" cy="220" rx="120" ry="70"/>
+    </g>
+    <g fill="#ef4444"><circle cx="610" cy="290" r="6"/></g>
+    <g fill="#22c55e"><circle cx="500" cy="260" r="6"/></g>
+    <rect x="70" y="380" width="660" height="150" rx="12" fill="#0b1220" stroke="#475569"/>
+    <text x="90" y="410" fill="#93c5fd" font-size="12" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace">
+      CRM: Route via FR → End user flagged (embargoed). Funds origin ≠ end user screening.
+    </text>
+  </svg>`,
+  procurement:`<svg class="w h" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+    <defs><linearGradient id="pg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0b1220"/><stop offset="100%" stop-color="#111827"/></linearGradient></defs>
+    <rect width="800" height="600" fill="url(#pg)"/>
+    <rect x="80" y="70" width="640" height="420" rx="14" fill="#0f172a" stroke="#334155"/>
+    <g fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="12">
+      <text x="110" y="110">Vendor A — SLA: 99.9% — Cost: $$</text>
+      <text x="110" y="140">Vendor B — SLA: 98.5% — Cost: $$$ (Evaluator holds shares)</text>
+      <text x="110" y="170">Vendor C — SLA: 99.5% — Cost: $$</text>
+    </g>
+    <rect x="100" y="125" width="600" height="24" fill="rgba(239,68,68,.25)" stroke="#ef4444"/>
+    <g>
+      <rect x="110" y="210" width="180" height="120" fill="#111827" stroke="#374151"/>
+      <rect x="310" y="210" width="180" height="120" fill="#111827" stroke="#374151"/>
+      <rect x="510" y="210" width="170" height="120" fill="#111827" stroke="#374151"/>
+    </g>
+  </svg>`,
+  contracts:`<svg class="w h" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+    <defs><linearGradient id="cg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#161b2b"/><stop offset="100%" stop-color="#0d1322"/></linearGradient></defs>
+    <rect width="800" height="600" fill="url(#cg)"/>
+    <rect x="80" y="80" width="640" height="440" rx="12" fill="#111827" stroke="#2b3446"/>
+    <rect x="110" y="110" width="580" height="160" rx="8" fill="#0f172a" stroke="#334155"/>
+    <rect x="110" y="290" width="580" height="160" rx="8" fill="#0f172a" stroke="#334155"/>
+    <text x="130" y="140" fill="#a5b4fc" font-size="13" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace">
+      Customer contract requires “Consultant X” — unusual clause
+    </text>
+    <text x="130" y="320" fill="#a5b4fc" font-size="13" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace">
+      Consultant site: vague services, limited staff — red flags
+    </text>
+  </svg>`,
+  finance:`<svg class="w h" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+    <defs><linearGradient id="fg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0c1324"/><stop offset="100%" stop-color="#0a1020"/></linearGradient></defs>
+    <rect width="800" height="600" fill="url(#fg)"/>
+    <rect x="80" y="70" width="640" height="420" rx="14" fill="#0f172a" stroke="#334155"/>
+    <g fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="12">
+      <text x="110" y="110">Q1 Actuals vs Q2 Reported — anomalies detected</text>
+    </g>
+    <rect x="100" y="140" width="600" height="260" fill="#0b1220" stroke="#334155"/>
+    <rect x="160" y="220" width="80" height="120" fill="#60A5FA"/>
+    <rect x="260" y="200" width="80" height="140" fill="#60A5FA"/>
+    <rect x="360" y="240" width="80" height="100" fill="#60A5FA"/>
+    <rect x="460" y="120" width="80" height="220" fill="#EF4444"/>
+    <text x="460" y="115" fill="#EF4444" font-size="12">Flag</text>
+  </svg>`,
+  social:`<svg class="w h" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+    <defs><linearGradient id="sg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#10172a"/><stop offset="100%" stop-color="#0c1426"/></linearGradient></defs>
+    <rect width="800" height="600" fill="url(#sg)"/>
+    <rect x="110" y="60" width="580" height="420" rx="12" fill="#111827" stroke="#334155"/>
+    <rect x="130" y="90" width="540" height="80" rx="8" fill="#0f172a" stroke="#334155"/>
+    <text x="145" y="120" fill="#e5e7eb" font-size="14">@employee • Just signed a huge partnership! Terms look amazing!</text>
+    <rect x="130" y="190" width="540" height="200" rx="8" fill="#0f172a" stroke="#334155"/>
+    <text x="145" y="220" fill="#a5b4fc" font-size="13">Counterparty legal: This post reveals confidential info — NDA risk</text>
+  </svg>`,
+  report:`<svg class="w h" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+    <defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#101524"/><stop offset="100%" stop-color="#0e1220"/></linearGradient></defs>
+    <rect width="800" height="600" fill="url(#rg)"/>
+    <rect x="80" y="80" width="640" height="440" rx="12" fill="#111827" stroke="#2b3446"/>
+    <rect x="110" y="110" width="580" height="120" rx="8" fill="#0f172a" stroke="#334155"/>
+    <text x="130" y="145" fill="#93c5fd" font-size="13" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace">
+      Anonymous reporting portal — non-retaliation policy
+    </text>
+    <rect x="110" y="250" width="580" height="220" rx="8" fill="#0f172a" stroke="#334155"/>
+    <text x="130" y="290" fill="#a5b4fc" font-size="13" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace">
+      Colleague saw misconduct but stayed silent — duty to speak up
+    </text>
+  </svg>`
+};
 
-  const SVG_MAGNIFYING_GLASS = `
-  <svg class="magnifying-glass w-16 h-16 text-yellow-400 transition-transform" viewBox="0 0 24 24" aria-hidden="true">
-    <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-  </svg>`;
-
-  // --- Scene SVG Data ---
-  const SCENE_SVGS = {
-    hq: `
-      <svg width="100%" height="100%" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
-        <defs>
-          <radialGradient id="grad1" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-            <stop offset="0%" stop-color="#4338ca"/>
-            <stop offset="100%" stop-color="#1e1b4b"/>
-          </radialGradient>
-          <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(129, 140, 248, 0.2)" stroke-width="1"/>
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#grad1)"/>
-        <rect width="100%" height="100%" fill="url(#grid)"/>
-        <rect x="100" y="50" width="600" height="400" fill="rgba(0,0,0,0.3)" rx="20" stroke="rgba(165, 180, 252, 0.5)" stroke-width="2"/>
-        <text x="400" y="40" font-family="Roboto Mono, monospace" font-size="20" fill="#a5b4fc" text-anchor="middle">DETECTIVE HQ</text>
-        <path d="M120 100 C 200 150, 300 100, 400 150 S 600 200, 700 150" stroke="#a5b4fc" stroke-width="2" fill="none" stroke-dasharray="10 20">
-          <animate attributeName="stroke-dashoffset" from="30" to="0" dur="2s" repeatCount="indefinite"/>
-        </path>
-        <path d="M120 300 C 250 250, 350 350, 500 300 S 650 250, 700 300" stroke="#a5b4fc" stroke-width="1" fill="none" stroke-dasharray="5 15">
-          <animate attributeName="stroke-dashoffset" from="0" to="20" dur="3s" repeatCount="indefinite"/>
-        </path>
-      </svg>
-    `,
-    codeReview: `
-      <svg width="100%" height="100%" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
-        <rect width="100%" height="100%" fill="#020617"/>
-        <rect x="50" y="50" width="330" height="500" fill="#1e293b" rx="10"/>
-        <foreignObject x="60" y="60" width="310" height="480">
-          <pre xmlns="http://www.w3.org/1999/xhtml" style="color: #94a3b8; font-size: 12px; white-space: pre-wrap;">
-<code>function processUser(user) {
-  // ...
-  if (user.isValid()) {
-    console.log('Processing...');
-    // A lot of important code here...
+/* ======== Cases (with updates to Case 3 context) ======== */
+const CASES=[
+  { // 1 Integrity
+    title:"The Case of the Critical Bug", scene:"hq",
+    briefing:"Our first case involves <strong>Trust & Integrity</strong>. Integrity means doing the right thing, even when no one is watching.",
+    clues:[
+      {id:'1a', type:'email', x:'9%',  y:'48%', evidence:"<b>CASE LOG:</b> Manager email demanding same-day release."},
+      {id:'1b', x:'78%', y:'24%', evidence:"<b>CASE LOG:</b> Commit shows <code>@TODO: FIX LATER</code> around auth checks."}
+    ],
+    interrogation:'"I saw the bug, but the deadline was tight. I planned to patch it next week."',
+    choices:[
+      {t:"Report it and block release until the risk is understood.", ok:true,  fb:"Correct. Transparency protects users and JetBrains. Shipping with a known vulnerability violates our standards."},
+      {t:"Ship now and patch next sprint; low likelihood of impact.",      ok:false, fb:"Known risk + silence ≠ integrity. We do not gamble with user security."},
+      {t:"Remove the logging to avoid raising alarms.",                    ok:false, fb:"Concealment worsens the breach of trust and adds legal/ethical exposure."}
+    ],
+    quiz:{q:"Which response best reflects JetBrains’ integrity standard?",
+          a:["Fix later if customers complain.","Report the risk and delay release if needed.","Silence the logs to reduce attention."], c:1}
+  },
+  { // 2 Harassment / Discrimination
+    title:"The Case of the Hostile Humor", scene:"cafeteria",
+    briefing:"Respect and professionalism are non-negotiable—across cultures, locations, and contexts.",
+    clues:[
+      {id:'2a', x:'22%', y:'30%', evidence:"<b>CASE LOG:</b> Chat snippet shows a stereotype-based “joke” toward Nhung."},
+      {id:'2b', x:'75%', y:'38%', evidence:"<b>CASE LOG:</b> HR note: anonymous complaint about jokes impacting morale."}
+    ],
+    interrogation:'"It was just a joke! I didn’t mean any harm, and everyone else laughed."',
+    choices:[
+      {t:'Call it out respectfully: “Let’s keep jokes off people’s backgrounds.”', ok:true,  fb:"Correct. Intent doesn’t erase impact; uphold inclusion and set a clear standard."},
+      {t:"Laugh it off—no harm intended.",                                       ok:false, fb:"Minimizing normalizes the behavior and undermines inclusion."},
+      {t:"Say nothing to avoid tension.",                                         ok:false, fb:"Silence allows a hostile environment to persist."}
+    ],
+    quiz:{q:"Select the most accurate takeaway:",
+          a:["Harassment is tolerated if intent wasn’t harmful.","Respect and professionalism foster collaboration and a positive environment.","Team leads may mock subordinates if everyone laughs."], c:1}
+  },
+  { // 3 Compliance with Laws (Sanctions) — ADDED CONTEXT
+    title:"The Case of the Sanctioned Sale", scene:"map",
+    briefing:`<strong>Trade controls apply to the end user, end use, and destination</strong>.
+      Payments routed through a non-sanctioned country (e.g., France) do not legalize a sale to a restricted end user (e.g., Syria).
+      Screening must cover the purchaser, intermediaries, and ultimate end user. Red flags:
+      <ul class="list">
+        <li>Requests to ship to / license for a restricted party/territory via an intermediary.</li>
+        <li>Mismatched billing vs. installation locations.</li>
+        <li>Pressure to “keep JetBrains out of the paperwork.”</li>
+      </ul>
+      When in doubt, pause and escalate to Legal/Compliance.`,
+    clues:[
+      {id:'3a', type:'email', x:'18%', y:'34%', evidence:"Prospect proposes routing payment through France while the end user is in Syria."},
+      {id:'3b', x:'69%', y:'26%', evidence:"Legal memo lists embargoed regions and requires screening for all counterparties and end users."}
+    ],
+    interrogation:`"It’s a huge sale and funds come from France. If we don’t do it, a competitor will."`,
+    choices:[
+      {t:"Reject/hold the deal and escalate to Legal/Compliance.", ok:true,  fb:"Correct. Indirect supply to sanctioned parties is prohibited regardless of payment route or where the funds originate."},
+      {t:"Proceed if the reseller signs a side letter promising lawful use.",   ok:false, fb:"Side letters don’t neutralize sanctions risk; the transaction would still be unlawful."},
+      {t:"Ship a limited feature set to reduce risk.",                           ok:false, fb:"Partial delivery does not cure a sanctions violation. The issue is <em>who</em> receives it."}
+    ],
+    quiz:{q:"Screening flags a sanctioned end user behind an EU intermediary. What should you do?",
+          a:["Ship via the intermediary to keep money flows clean.","Decline/hold and involve Legal/Compliance.","Proceed with a trial-only license."], c:1}
+  },
+  { // 4 Conflicts of Interest
+    title:"The Case of the Undisclosed Shareholder", scene:"procurement",
+    briefing:"Even the appearance of a conflict erodes trust. Disclose and recuse immediately.",
+    clues:[
+      {id:'4a', x:'18%', y:'58%', evidence:"Disclosure shows evaluator owns shares in Vendor B."},
+      {id:'4b', x:'72%', y:'28%', evidence:"Scoring favors Vendor B despite higher cost and lower SLA."}
+    ],
+    interrogation:'"My small investment didn’t affect my decision—they’re just the best."',
+    choices:[
+      {t:"Disclose the interest and recuse from the process.", ok:true,  fb:"Correct. Recusal protects objectivity and credibility."},
+      {t:"Continue but add a note in the file.",                ok:false, fb:"Participation still compromises fairness—note alone is insufficient."},
+      {t:"Sell the shares after awarding the contract.",        ok:false, fb:"Post-hoc changes don’t remediate the biased decision."}
+    ],
+    quiz:{q:"Which action best addresses a potential conflict?",
+          a:["Participate but promise fairness.","Disclose and recuse.","Hide the conflict to avoid delays."], c:1}
+  },
+  { // 5 Anti-Bribery / Suspicious Consultant
+    title:"The Case of the Mysterious Consultant", scene:"contracts",
+    briefing:"Mandated third parties with vague value are a red flag for bribery/kickbacks. Engage Compliance immediately.",
+    clues:[
+      {id:'5a', x:'20%', y:'22%', evidence:"Contract requires a specific consultant with no clear purpose."},
+      {id:'5b', x:'70%', y:'50%', evidence:"Consultant site shows vague services and minimal staff."}
+    ],
+    interrogation:'"It was a tiny side contract that guaranteed the big deal would close."',
+    choices:[
+      {t:"Pause deal, escalate to Compliance for review.", ok:true,  fb:"Correct. Unexplained mandated intermediaries can signal kickbacks."},
+      {t:"Approve if consultant fee is kept small.",       ok:false, fb:"Size doesn’t remove risk; intent and structure matter."},
+      {t:"Proceed and add a stronger audit clause.",       ok:false, fb:"Controls don’t sanitize an inherently suspicious mandate."}
+    ],
+    quiz:{q:"When a customer mandates a dubious third party, you should…",
+          a:["Proceed if fee is small.","Escalate for anti-bribery review.","Ignore if timeline is critical."], c:1}
+  },
+  { // 6 Financial Integrity
+    title:"The Case of the Falsified Figures", scene:"finance",
+    briefing:"Financial statements must be accurate. ‘Smoothing’ numbers is fraud and undermines trust.",
+    clues:[
+      {id:'6a', x:'15%', y:'18%', evidence:"Manager email: “Hit the quarterly targets by any means.”"},
+      {id:'6b', x:'58%', y:'18%', evidence:"Q2 report inflates numbers vs Q1 actuals without basis."}
+    ],
+    interrogation:'"Everyone ‘smooths’ sometimes. I’d fix it next quarter—just protecting the team."',
+    choices:[
+      {t:"Report discrepancy; correct figures; involve Finance leadership.", ok:true,  fb:"Correct. Accuracy is non-negotiable; misreporting has legal implications."},
+      {t:"Defer correction to next quarter.",                               ok:false, fb:"Delaying perpetuates fraud risk and breaks trust."},
+      {t:"Reduce the inflation but keep some cushion.",                     ok:false, fb:"Any falsification is unacceptable."}
+    ],
+    quiz:{q:"Best action when you find inflated figures?",
+          a:["Quietly adjust later.","Report now and correct.","Keep partial inflation to meet goals."], c:1}
+  },
+  { // 7 Confidentiality / NDA
+    title:"The Case of the Premature Post", scene:"social",
+    briefing:"NDA and confidentiality terms bind us. ‘General’ statements can still breach obligations.",
+    clues:[
+      {id:'7a', x:'22%', y:'16%', evidence:"Public post reveals new partnership before official announcement."},
+      {id:'7b', x:'28%', y:'48%', evidence:"Counterparty legal threatens to pull out due to NDA breach."}
+    ],
+    interrogation:'"I was excited! It was great marketing and only ‘general’ info."',
+    choices:[
+      {t:"Remove post; notify Comms/Legal; reinforce NDA training.", ok:true,  fb:"Correct. Any premature disclosure risks the deal and violates obligations."},
+      {t:"Leave it since details were general.",                     ok:false, fb:"Intent doesn’t matter; timing and terms do."},
+      {t:"Repost with fewer details.",                               ok:false, fb:"Breach already occurred; containment and escalation are required."}
+    ],
+    quiz:{q:"When in doubt about sharing news externally:",
+          a:["Post first, edit later.","Ask Comms/Legal before posting.","Assume ‘general’ info is safe."], c:1}
+  },
+  { // 8 Reporting Violations / Speak Up
+    title:"The Case of the Silent Witness", scene:"report",
+    briefing:"We all share the duty to speak up. Anonymous channels exist; retaliation is prohibited.",
+    clues:[
+      {id:'8a', x:'20%', y:'22%', evidence:"Colleague saw harassment but stayed silent due to fear."},
+      {id:'8b', x:'66%', y:'44%', evidence:"Policy: non-retaliation; anonymous reporting available."}
+    ],
+    interrogation:'"I saw it happen, but it’s not my fight. I don’t want trouble with a senior teammate."',
+    choices:[
+      {t:"Use HR/Ethics channels; report what you saw.", ok:true,  fb:"Correct. Speaking up protects people and the company; retaliation is not allowed."},
+      {t:"Wait to see if it happens again.",             ok:false, fb:"Delays prolong harm and risk."},
+      {t:"Tell a friend to report for you later.",       ok:false, fb:"Second-hand and delayed reporting weaken response."}
+    ],
+    quiz:{q:"If you witness misconduct:",
+          a:["Stay out to avoid tension.","Report through the available channels.","Only speak up if you’re directly targeted."], c:1}
   }
-}</code>
-            <animateTransform attributeName="transform" type="translate" from="0 0" to="0 -50" dur="8s" repeatCount="indefinite"/>
-          </pre>
-        </foreignObject>
-        <rect x="420" y="50" width="330" height="500" fill="#1e293b" rx="10"/>
-        <foreignObject x="430" y="60" width="310" height="480">
-          <pre xmlns="http://www.w3.org/1999/xhtml" style="color: #94a3b8; font-size: 12px; white-space: pre-wrap;">
-<code>function processUser(user) {
-  // ...
-  // @TODO: FIX LATER
-  // BUG: Bypassing validation for admins
-  if (user.isValid() || user.isAdmin) {
-    console.log('Processing...');
-    // ...
-  }
-}</code>
-          </pre>
-        </foreignObject>
-        <rect x="425" y="125" width="320" height="25" fill="#ef4444" fill-opacity="0.2" stroke="#ef4444" stroke-width="1"/>
-      </svg>
-    `
-    // (Other scenes for future cases can be added here)
-  };
+];
 
-  // --- Game Data ---
-  const caseFiles = [
-    {
-      title: "The Case of the Critical Bug",
-      briefing:
-        "Our first case involves <strong>Trust and Integrity</strong>. Integrity means doing the right thing, even when no one is watching. Let's see what happens.",
-      sceneSVG: SCENE_SVGS.codeReview,
-      clues: [
-        {
-          id: 'clue1-1',
-          type: 'email',
-          x: '10%',
-          y: '45%',
-          evidence: "<b>CASE LOG:</b> Email from manager says 'Release MUST go out today, no exceptions!'"
-        },
-        {
-          id: 'clue1-2',
-          type: 'text',
-          x: '80%',
-          y: '20%',
-          evidence: "<b>CASE LOG:</b> Code commit shows a vulnerability marked '@TODO: FIX LATER'."
-        }
-      ],
-      interrogation:
-        "'Look, I saw the bug, but the deadline was tight. I figured I'd patch it next week. What was I supposed to do?'",
-      choices: [
-        {
-          text: "Your Response: 'You should have reported it immediately.'",
-          correct: true,
-          feedback:
-            "By prioritizing transparency and security over a deadline, you protect our users and uphold the trust they place in JetBrains. This is the core of our <strong>Integrity</strong> principle."
-        },
-        {
-          text: "Your Response: 'You were right to prioritize the deadline.'",
-          correct: false,
-          feedback:
-            "The principle of <strong>Integrity</strong> means we must be transparent about errors, especially those that impact security. Hiding a problem puts our users and our company's reputation at risk."
-        }
-      ]
-    },
-    // Placeholder for future cases (kept as-is)
-  ];
+/* ======== Final Reinforcement Quiz ======== */
+const FINAL_QUIZ={
+  title:"Final Reinforcement",
+  items:[
+    {q:"Which factor most determines sanctions risk in a deal?", a:["Origin of payment only.","Ultimate end user/end use/destination.","The salesperson’s intent."], c:1},
+    {q:"A leader makes ‘jokes’ about a teammate’s background. Appropriate action?", a:["Laugh to de-escalate.","Address it respectfully and reinforce standards.","Ignore unless a complaint is filed."], c:1},
+    {q:"You discover inflated numbers in a public report. Best step?", a:["Fix next quarter to avoid panic.","Report now and correct the figures.","Reduce the inflation but keep some."], c:1}
+  ]
+};
 
-  // --- Game State & Animation ---
-  let currentCase = 0; score = 0; cluesFound = 0;
-  const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-  let sfx;
+/* ======== DOM & State ======== */
+const $=s=>document.querySelector(s);
+const start=$('#start'), game=$('#game'), end=$('#end');
+const scene=$('#scene'), panel=$('#panel');
+const startBtn=$('#start-btn'), restartBtn=$('#restart-btn');
+const endMsg=$('#end-msg'), passWrap=$('#password-wrap');
 
-  // --- Audio ---
-  function initializeAudio() {
-    sfx = {
-      openCase: new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 } }).toDestination(),
-      clue: new Tone.MembraneSynth({ pitchDecay: 0.005, octaves: 10, envelope: { attack: 0.001, decay: 0.1, sustain: 0.01 } }).toDestination(),
-      stamp: new Tone.NoiseSynth({ noise: { type: 'brown' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.1 } }).toDestination(),
-    };
-  }
+let idx=-1, score=0, found=0;
 
-  function playSfx(type) {
-    if (!sfx) return;
-    if (Tone.context.state !== 'running') { Tone.start(); }
-    if (type === 'openCase') sfx.openCase.triggerAttackRelease("G2", "8n");
-    if (type === 'clue') sfx.clue.triggerAttackRelease("C5", "8n");
-    if (type === 'stamp') sfx.stamp.triggerAttackRelease("0.2s");
-  }
+/* ======== Utilities ======== */
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+function express(mood){
+  const u=$('#unit-734'); if(!u) return;
+  u.querySelectorAll('.face').forEach(f=>f.style.opacity=0);
+  const d=u.querySelector('#face-'+mood); if(d) d.style.opacity=1;
+}
+function fadeScene(svg,title){
+  scene.innerHTML='';
+  const t=document.createElement('div'); t.className='scene-title'; t.textContent=title||''; scene.appendChild(t);
+  const lay=document.createElement('div'); lay.className='fade'; lay.innerHTML=svg.replace('class="w h"','style="width:100%;height:100%"');
+  scene.appendChild(lay);
+  scene.insertAdjacentHTML('beforeend', SVG_734);
+  requestAnimationFrame(()=>{ lay.classList.add('show'); $('#unit-734').style.left='24px'; });
+}
+function showInstruction(text){
+  $('#instruction')?.remove();
+  const d=document.createElement('div'); d.id='instruction'; d.innerHTML=`<span style="font-size:.84rem">${text}</span>`;
+  scene.appendChild(d);
+}
+function hotspot(x,y,onClick){
+  const d=document.createElement('div'); d.className='hot'; d.style.left=x; d.style.top=y; d.style.position='absolute'; d.innerHTML=MAG;
+  d.addEventListener('click',()=>onClick(d)); scene.appendChild(d); return d;
+}
+function popup({title,html,okText="Close",tone,ok}){
+  const overlay=document.createElement('div'); overlay.className='overlay';
+  const p=document.createElement('div'); p.className='popup';
+  const toneBg = tone==='bad' ? 'background:#FEF2F2;color:#7F1D1D'
+               : tone==='ok'  ? 'background:#ECFDF5;color:#064E3B'
+               : 'background:#F3F4F6;color:#111827';
+  p.innerHTML=`
+    <div class="hd" style="${toneBg};border-bottom:2px solid #E5E7EB">${title}</div>
+    <div class="bd">${html}</div>
+    <div class="ft"><button class="btn" id="ok">${okText}</button></div>`;
+  overlay.appendChild(p); scene.appendChild(overlay);
+  $('#ok').onclick=()=>{ overlay.remove(); ok && ok(); };
+}
+function setPanel(titleHTML, inner=''){
+  panel.innerHTML=`
+    <div class="panel-head">
+      <div class="panel-title">${titleHTML}</div>
+      <span class="panel-tag">Case ${Math.max(idx+1,0)} / ${CASES.length}</span>
+    </div>
+    <div class="panel-body" id="pbody">${inner}</div>`;
+}
 
-  // --- Unit 734 Controller ---
-  const unit734 = {
-    element: null,
-    init() {
-      const existing = document.getElementById('unit-734');
-      if(existing) existing.remove();
-      scene.innerHTML += SVG_UNIT734;
-      this.element = document.getElementById('unit-734');
-      this.element.style.left = '-350px'; // Ensure it starts off-screen
-      this.element.style.right = 'auto';
-    },
-    enter(position = 'right') {
-      if(!this.element) return;
-      if (position === 'right') {
-        this.element.style.left = 'auto';
-        this.element.style.right = '20px';
-      } else {
-        this.element.style.right = 'auto';
-        this.element.style.left = '50px';
+/* ======== System Boot (all text at once, then continue) ======== */
+function boot(){
+  AudioKit.open();
+  start.classList.add('hidden'); end.classList.add('hidden'); game.classList.remove('hidden');
+  idx=-1; score=0;
+  fadeScene(SCENE.hq, "DETECTIVE HQ");
+  setPanel("System Boot", `<div id="dlg" class="box"></div>`);
+  express('neutral');
+
+  const d=$('#dlg');
+  d.innerHTML = `
+    <p><strong>Greetings.</strong> I am <strong>Unit 734</strong>, your assigned field analyst.</p>
+    <p>My function is to assist you in upholding the <strong>JetBrains Code of Conduct</strong>.</p>
+    <p>We’ll review a series of short cases. For each, find the clues, connect them, and choose the most appropriate action.</p>
+    <ul class="list">
+      <li>Click the <em>magnifying glass</em> icons to uncover clues.</li>
+      <li>When all clues are found, select <strong>Proceed to Response</strong> to offer your judgment.</li>
+      <li>Answer a quick check after each case. There’s a brief reinforcement quiz at the end.</li>
+    </ul>
+  `;
+  const c=document.createElement('button');
+  c.className='btn'; c.style.width='100%'; c.textContent='Begin Investigation';
+  c.onclick=()=>loadCase(0);
+  $('#pbody').appendChild(document.createElement('div')).appendChild(c);
+}
+
+/* ======== Case Flow ======== */
+function loadCase(i){
+  if(i>=CASES.length){ return finalReinforcement(); }
+  idx=i; found=0;
+  const data=CASES[i];
+  AudioKit.blip();
+  fadeScene(SCENE[data.scene], data.title);
+  showInstruction("Click on the magnifying glasses to find clues");
+  setPanel(data.title, `
+    <div id="brief" class="box" style="background:#DBEAFE;border-color:#93C5FD">${data.briefing}</div>
+    <div class="log" id="log"></div>
+    <div id="proceed-wrap" style="margin-top:8px"></div>
+  `);
+
+  data.clues.forEach(c=>{
+    hotspot(c.x,c.y, (el)=>{
+      AudioKit.blip();
+      // Email-style popup if type === 'email'
+      if(c.type==='email'){
+        popup({
+          title:"Inbox • Manager <span style='font-weight:600;color:#374151'>&lt;manager@jetbrains.com&gt;</span>",
+          html:`<div style="background:#fff;border:1px solid #E5E7EB;border-radius:8px;overflow:hidden">
+                  <div style="padding:.6rem .8rem;border-bottom:1px solid #E5E7EB;background:#F9FAFB">
+                    <div style="font-weight:800">Subject: URGENT — Release Today</div>
+                    <div style="font-size:.85rem;color:#6B7280">To: Team • Today 09:12</div>
+                  </div>
+                  <div style="padding:.85rem .9rem;line-height:1.55">
+                    Team,<br/>The release <strong>MUST</strong> go out today, no exceptions. Stakeholders are waiting.
+                    <br/><br/>— Manager
+                  </div>
+                </div>`,
+          okText:"Log as Evidence",
+          tone:'info',
+          ok:()=>{
+            logEvidence();
+          }
+        });
+      }else{
+        logEvidence();
       }
-    },
-    express(mood) {
-      if (!this.element) return;
-      this.element.querySelectorAll('.face').forEach(f => f.style.opacity = 0);
-      const face = this.element.querySelector(`#face-${mood}`);
-      if (face) face.style.opacity = 1;
-    },
-    exit() {
-      if (!this.element) return;
-      this.element.style.left = '-350px';
-      this.element.style.right = 'auto';
-    }
-  };
 
-  // --- Typewriter Effect ---
-  async function typewriter(element, text, speed = 30) {
-    element.innerHTML = '';
-    element.classList.add('typewriter-cursor');
-    let i = 0;
-    while (i < text.length) {
-      if (text[i] === '<') {
-        let tagEnd = text.indexOf('>', i);
-        if (tagEnd !== -1) {
-          element.innerHTML += text.substring(i, tagEnd + 1);
-          i = tagEnd + 1;
-          continue;
+      function logEvidence(){
+        el.style.transform='scale(.9)'; setTimeout(()=>el.remove(),120);
+        const p=document.createElement('p'); p.className='box'; p.style.background='#FEF9C3'; p.style.borderColor='#FDE68A'; p.innerHTML=c.evidence;
+        $('#log').appendChild(p); found++;
+        if(found >= data.clues.length){
+          // Gate progression with a proceed button
+          const wrap=$('#proceed-wrap'); wrap.innerHTML='';
+          const b=document.createElement('button'); b.className='btn secondary'; b.style.width='100%';
+          b.textContent='Proceed to Response';
+          b.onclick=()=>interrogate(data);
+          wrap.appendChild(b);
+          showInstruction('All clues found. Proceed when ready.');
         }
       }
-      element.innerHTML += text[i];
-      i++;
-      await wait(speed);
-    }
-    element.classList.remove('typewriter-cursor');
-  }
+    });
+  });
+}
 
-  // ----------- NEW: Proceed gate helper (click to advance after all clues) -----------
-  function showResponseGate(nextFn) {
-    const gateId = 'proceed-gate';
-    if (document.getElementById(gateId)) return; // avoid duplicates
+function interrogate(data){
+  express('thinking');
+  setPanel(data.title);
+  const body=$('#pbody');
+  const t=document.createElement('div'); t.style.fontSize='.8rem'; t.style.fontWeight='900'; t.style.color='#374151'; t.textContent='CONNECT THE CLUES:'; body.appendChild(t);
+  const q=document.createElement('div'); q.style.fontStyle='italic'; q.style.marginTop='6px'; q.innerHTML = `Suspect says: ${data.interrogation}`; body.appendChild(q);
+  const ask=document.createElement('div'); ask.style.marginTop='8px'; ask.style.color='#4338CA'; ask.style.fontWeight='900'; ask.textContent='How do you respond, Detective?'; body.appendChild(ask);
 
-    const gate = document.createElement('div');
-    gate.id = gateId;
-    gate.className = 'mt-4 p-3 bg-emerald-50 border border-emerald-300 rounded';
-    gate.innerHTML = `
-      <p class="text-emerald-800 font-semibold mb-2">
-        Clues secured. Ready to connect the dots?
-      </p>
-      <button id="proceed-to-response"
-        class="bg-emerald-600 text-white font-bold py-2 px-4 rounded hover:bg-emerald-700">
-        Proceed to Respond
-      </button>
-    `;
-    caseDetails.appendChild(gate);
-    caseDetails.scrollTop = caseDetails.scrollHeight;
-
-    document.getElementById('proceed-to-response').onclick = () => {
-      gate.remove();
-      nextFn();
+  const box=document.createElement('div'); box.style.marginTop='8px'; box.style.display='grid'; box.style.gap='8px'; body.appendChild(box);
+  data.choices.forEach(choice=>{
+    const b=document.createElement('button'); b.className='choice'; b.textContent=choice.t;
+    b.onclick=()=>{
+      document.querySelectorAll('.choice').forEach(x=>x.classList.add('disabled'));
+      if(choice.ok){
+        AudioKit.ok(); express('happy');
+        popup({title:"Conclusion: Correct!", html:choice.fb, okText:"Continue", tone:'ok', ok:()=>caseQuiz(data)});
+      }else{
+        AudioKit.bad(); express('worried'); b.classList.add('incorrect');
+        popup({title:"Not quite.", html:choice.fb+"<br/><br/><strong>Try another response.</strong>", okText:"Try again", tone:'bad',
+          ok:()=>{ document.querySelectorAll('.choice').forEach(x=>x.classList.remove('disabled')); }});
+      }
     };
-  }
+    box.appendChild(b);
+  });
+}
 
-  function showPopup({ type, data, onclose }) {
-    const overlay = document.createElement('div');
-    overlay.className = 'absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20';
-
-    let popupHTML;
-
-    // ----------- UPDATED: Email-style popup -----------
-    if (type === 'email') {
-      popupHTML = `
-        <div class="email-modal">
-          <div class="toolbar">
-            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-            <div class="ml-2 text-xs text-gray-500">Message Preview</div>
-          </div>
-          <div class="p-4 bg-white rounded-t-lg border-b">
-            <div class="email-header">
-              <div class="label">From:</div><div>Manager &lt;manager@jetbrains.com&gt;</div>
-              <div class="label">To:</div><div>Release Team &lt;release@jetbrains.com&gt;</div>
-              <div class="label">Date:</div><div>Today, 09:12</div>
-              <div class="label">Subject:</div><div class="subject">URGENT: Release Today</div>
-            </div>
-          </div>
-          <div class="p-6 bg-white">
-            <p class="text-gray-800 leading-relaxed">
-              Team, the release MUST go out today, no exceptions! The stakeholders are waiting.
-            </p>
-          </div>
-          <div class="p-4 bg-gray-50 rounded-b-lg text-right">
-            <button id="close-popup-btn" class="bg-indigo-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-indigo-700">Log as Evidence</button>
-          </div>
-        </div>
-      `;
-    } else if (type === 'incorrect') {
-      popupHTML = `
-        <div class="p-4 bg-red-100 rounded-t-lg border-b border-red-300">
-          <p class="font-bold text-red-800">That's not the right call.</p>
-        </div>
-        <div class="p-6">${data.feedback}</div>
-        <div class="p-4 bg-gray-50 rounded-b-lg text-right">
-          <button id="close-popup-btn" class="bg-red-600 text-white font-bold py-2 px-6 rounded-lg">Try Another Lead</button>
-        </div>`;
-    } else if (type === 'correct') {
-      popupHTML = `
-        <div class="p-4 bg-green-100 rounded-t-lg border-b border-green-300">
-          <p class="font-bold text-green-800">Conclusion: Correct!</p>
-        </div>
-        <div class="p-6">${data.feedback}</div>
-        <div class="p-4 bg-gray-50 rounded-b-lg text-right">
-          <button id="close-popup-btn" class="bg-gray-800 text-white font-bold py-2 px-6 rounded-lg">Next Simulation</button>
-        </div>`;
-    }
-
-    const popup = document.createElement('div');
-    popup.className = 'popup-anim bg-white rounded-lg shadow-2xl w-full max-w-lg border-2 border-gray-300';
-    popup.innerHTML = popupHTML;
-
-    overlay.appendChild(popup);
-    scene.appendChild(overlay);
-    document.getElementById('close-popup-btn').addEventListener('click', () => {
-      overlay.remove();
-      if(onclose) onclose();
-    }, { once: true });
-  }
-
-  // --- Game Flow ---
-  async function startGame() {
-    if (!sfx) initializeAudio();
-    playSfx('openCase');
-    startScreen.classList.add('hidden');
-    endScreen.classList.add('hidden');
-    gameScreen.classList.remove('hidden');
-    currentCase = 0; score = 0;
-    await loadIntro(); // intro first
-  }
-
-  // ----------- UPDATED: ensure HQ background & explicit click to continue -----------
-  async function loadIntro() {
-    // Force HQ background for the intro (prevents showing Case 1 background)
-    scene.innerHTML = SCENE_SVGS.hq;
-
-    // Set up Unit 734 and right pane
-    unit734.init();
-    caseDetails.innerHTML = `
-      <h2 class="text-2xl font-bold text-indigo-700 mb-4" style="font-family: 'Special Agent', sans-serif;">
-        System Boot
-      </h2>
-      <div id="dialogue-box" class="space-y-4"></div>
-    `;
-
-    await wait(500);
-    unit734.enter('left');
-    unit734.express('neutral');
-
-    const dialogueBox = document.getElementById('dialogue-box');
-
-    const p1 = document.createElement('p'); dialogueBox.appendChild(p1);
-    await typewriter(p1, "Greetings. I am Unit 734, your assigned field analyst.");
-
-    const p2 = document.createElement('p'); dialogueBox.appendChild(p2);
-    await typewriter(p2, "My function is to assist you in upholding the JetBrains Code of Conduct.");
-
-    const p3 = document.createElement('p'); dialogueBox.appendChild(p3);
-    await typewriter(p3, "Our first case file is ready for review. Shall we proceed?");
-
-    // Require explicit click to continue
-    const btnWrap = document.createElement('div');
-    btnWrap.innerHTML = `
-      <button id="start-case-btn"
-        class="mt-4 w-full bg-gray-800 text-white font-bold py-2 px-6 rounded-lg hover:bg-gray-900">
-        Open Case File
-      </button>`;
-    dialogueBox.appendChild(btnWrap);
-
-    document.getElementById('start-case-btn').onclick = async () => {
-      unit734.exit();
-      await wait(800);
-      loadCase(0);
+function caseQuiz(data){
+  setPanel(data.title, `
+    <div style="font-size:.9rem;color:#374151;margin-bottom:6px">Quick check:</div>
+    <div style="font-weight:800;margin-bottom:8px">${data.quiz.q}</div>
+    <div id="opts" style="display:grid;gap:8px"></div>
+  `);
+  const opts=$('#opts');
+  data.quiz.a.forEach((opt,i)=>{
+    const b=document.createElement('button'); b.className='choice'; b.textContent=opt;
+    b.onclick=()=>{
+      if(i===data.quiz.c){
+        AudioKit.ok(); score++;
+        popup({
+          title:"Nice!",
+          html:"That aligns with the policy. Onward.",
+          okText:"Next Case",
+          tone:'ok',
+          ok:()=>{
+            // ensure we increment before loading next
+            const nextIndex = idx + 1;
+            if(nextIndex < CASES.length) loadCase(nextIndex);
+            else finalReinforcement();
+          }
+        });
+      }else{
+        AudioKit.bad();
+        b.classList.add('incorrect');
+        popup({
+          title:"Not quite.",
+          html:"Look for the answer that reflects policy (not convenience). Try again.",
+          okText:"Continue",
+          tone:'bad'
+        });
+      }
     };
-  }
+    opts.appendChild(b);
+  });
+}
 
-  async function loadCase(index) {
-    if(index >= caseFiles.length) {
-      endGame();
-      return;
-    }
-    const data = caseFiles[index];
-    cluesFound = 0;
 
-    // Scene background
-    scene.innerHTML = '';
-    if (data.sceneSVG) { scene.innerHTML = data.sceneSVG; }
+/* ======== Final Reinforcement ======== */
+function finalReinforcement(){
+  setPanel(FINAL_QUIZ.title, `
+    <div class="box" style="background:#F3F4F6;border-color:#E5E7EB">
+      Brief reinforcement: choose the most accurate answer for each.
+    </div>
+    <div id="fq-wrap" style="margin-top:10px"></div>
+  `);
+  AudioKit.blip();
+  fadeScene(SCENE.hq, "Final Briefing");
 
-    unit734.init();
-    caseDetails.innerHTML = `
-      <h2 class="text-2xl font-bold text-indigo-700 mb-4" style="font-family: 'Special Agent', sans-serif;">
-        ${data.title}
-      </h2>
-      <div id="briefing-box" class="p-2 bg-blue-100 border border-blue-300 rounded text-sm mb-4"></div>
-      <div id="clue-log" class="space-y-2"></div>
-    `;
-    await wait(500); unit734.enter('right'); unit734.express('thinking');
+  let correct=0, current=0;
+  const wrap=$('#fq-wrap');
 
-    const briefingBox = document.getElementById('briefing-box');
-    await typewriter(briefingBox, data.briefing);
-
-    // Instruction panel
-    const instructionPanel = document.createElement('div');
-    instructionPanel.id = 'instruction-panel';
-    instructionPanel.className = 'absolute bg-yellow-200 p-2 rounded-lg shadow-lg border-2 border-yellow-400 text-center opacity-75';
-    instructionPanel.innerHTML = `<p class="font-bold text-yellow-800 text-sm">Find Clues!</p>`;
-    scene.appendChild(instructionPanel);
-
-    // Place hotspots
-    data.clues.forEach(clue => {
-      const hotspot = document.createElement('div');
-      hotspot.className = 'clue-hotspot'; hotspot.id = clue.id;
-      hotspot.style.left = clue.x; hotspot.style.top = clue.y;
-      hotspot.innerHTML = SVG_MAGNIFYING_GLASS;
-      hotspot.onclick = () => findClue(clue, data.clues.length);
-      scene.appendChild(hotspot);
+  function renderItem(){
+    wrap.innerHTML='';
+    const item=FINAL_QUIZ.items[current];
+    const q=document.createElement('div'); q.style.fontWeight='800'; q.style.margin='6px 0 8px'; q.textContent=item.q; wrap.appendChild(q);
+    item.a.forEach((opt,i)=>{
+      const b=document.createElement('button'); b.className='choice'; b.textContent=opt;
+      b.onclick=()=>{
+        if(i===item.c){ AudioKit.ok(); correct++; next(); }
+        else{ AudioKit.bad(); b.classList.add('incorrect'); }
+      };
+      wrap.appendChild(b);
     });
   }
 
-  function findClue(clueData, totalClues) {
-    const instructionPanel = document.getElementById('instruction-panel');
-    if(instructionPanel) instructionPanel.style.display = 'none';
-
-    const hotspot = document.getElementById(clueData.id);
-    if (!hotspot || hotspot.classList.contains('found')) return;
-
-    const logEvidence = () => {
-      hotspot.style.animation = 'clue-fade-out 0.3s ease-out forwards';
-      setTimeout(() => hotspot.remove(), 300);
-      cluesFound++;
-      const clueLog = document.getElementById('clue-log');
-      clueLog.innerHTML += `<p class="p-2 bg-yellow-100 border border-yellow-300 rounded text-sm pop-in">${clueData.evidence}</p>`;
-      caseDetails.scrollTop = caseDetails.scrollHeight;
-
-      // ----------- UPDATED: require click to advance after both clues -----------
-      if (cluesFound === totalClues) {
-        unit734.express('neutral');
-        showResponseGate(() => presentInterrogation(caseFiles[currentCase]));
-      }
-    };
-
-    if(clueData.type === 'email'){
-      showPopup({type: 'email', data: clueData, onclose: logEvidence });
-    } else {
-      logEvidence();
+  function next(){
+    current++;
+    if(current<FINAL_QUIZ.items.length){ renderItem(); }
+    else{
+      // Finish course
+      finish(correct);
     }
   }
 
-  async function presentInterrogation(data) {
-    caseDetails.innerHTML = `
-      <h2 class="text-2xl font-bold text-indigo-700 mb-4" style="font-family: 'Special Agent', sans-serif;">
-        ${data.title}
-      </h2>`;
-    await wait(500);
-    const interrogationEl = document.createElement('div');
-    interrogationEl.className = 'mt-4 p-2';
-    caseDetails.appendChild(interrogationEl);
+  renderItem();
+}
 
-    const titleEl = document.createElement('p');
-    titleEl.className = 'text-sm font-bold text-gray-700 mt-2';
-    interrogationEl.appendChild(titleEl);
-    await typewriter(titleEl, 'CONNECT THE CLUES:');
+/* ======== End Screen ======== */
+function finish(finalCorrect){
+  game.classList.add('hidden'); end.classList.remove('hidden');
+  const totalChecks = CASES.length + FINAL_QUIZ.items.length;
+  const got = score + (finalCorrect||0);
+  const pct = Math.round((got/totalChecks)*100);
+  endMsg.textContent=`You answered ${got} of ${totalChecks} checks correctly (${pct}%).`;
+  if(got >= totalChecks - 1){ passWrap.classList.remove('hidden'); } else { passWrap.classList.add('hidden'); }
+}
 
-    const promptEl = document.createElement('p');
-    promptEl.className = 'mt-2 text-gray-800 italic';
-    interrogationEl.appendChild(promptEl);
-    await typewriter(promptEl, `Suspect says: "${data.interrogation}"`);
-
-    const questionEl = document.createElement('p');
-    questionEl.className = 'mt-4 font-bold text-indigo-700';
-    interrogationEl.appendChild(questionEl);
-    await typewriter(questionEl, "How do you respond, Detective?");
-
-    const choicesContainer = document.createElement('div');
-    choicesContainer.id = 'choices-container'; choicesContainer.className = 'mt-2 space-y-2';
-    interrogationEl.appendChild(choicesContainer);
-    data.choices.forEach(choice => {
-      const button = document.createElement('button');
-      button.className = 'choice-btn w-full p-3 rounded-lg text-left font-semibold';
-      button.textContent = choice.text;
-      button.onclick = (e) => handleChoice(choice, e.currentTarget);
-      choicesContainer.appendChild(button);
-    });
-    caseDetails.scrollTop = caseDetails.scrollHeight;
-  }
-
-  async function handleChoice(choice, buttonEl) {
-    if (choice.correct) {
-      document.querySelectorAll('.choice-btn').forEach(btn => btn.classList.add('disabled'));
-      score++; unit734.express('happy');
-
-      showPopup({
-        type: 'correct',
-        data: choice,
-        onclose: async () => {
-          unit734.exit();
-          await wait(800);
-          currentCase++;
-          loadCase(currentCase);
-        }
-      });
-    } else {
-      buttonEl.classList.add('disabled', 'incorrect-choice');
-      unit734.express('worried');
-      showPopup({type: 'incorrect', data: choice});
-    }
-  }
-
-  function endGame() {
-    gameScreen.classList.add('hidden');
-    endScreen.classList.remove('hidden');
-    document.getElementById('end-message').textContent = `You correctly solved ${score} out of ${caseFiles.length} cases.`;
-    const passwordContainer = document.getElementById('password-container');
-    if (score >= caseFiles.length - 1) { passwordContainer.classList.remove('hidden'); }
-    else { passwordContainer.classList.add('hidden'); }
-  }
-
-  // --- Initializer ---
-  startBtn.addEventListener('click', startGame);
-  restartBtn.addEventListener('click', startGame);
+/* ======== Wires ======== */
+startBtn.addEventListener('click', ()=>{ boot(); });
+restartBtn.addEventListener('click', ()=>{
+  start.classList.remove('hidden'); end.classList.add('hidden');
 });
 </script>
 </body>
